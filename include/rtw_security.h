@@ -15,6 +15,7 @@
 #ifndef __RTW_SECURITY_H_
 #define __RTW_SECURITY_H_
 
+
 #define _NO_PRIVACY_		0x0
 #define _WEP40_				0x1
 #define _TKIP_				0x2

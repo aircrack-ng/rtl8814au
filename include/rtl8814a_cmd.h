@@ -146,6 +146,7 @@ void rtl8814_req_txrpt_cmd(PADAPTER padapter, u8 macid);
 		void rtl8814_set_BcnEarly_C2H_Rpt_cmd(PADAPTER padapter, u8 enable);
 	#endif
 #endif
+void rtl8814a_set_FwPwrModeInIPS_cmd(PADAPTER padapter, u8 cmd_param);
 
 void
 Set_RA_LDPC_8814(

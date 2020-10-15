@@ -3266,6 +3266,11 @@ static int rtw_cfg80211_set_auth_type(struct security_priv *psecuritypriv,
 
 	psecuritypriv->auth_type = sme_auth_type;
 
+	if (sme_auth_type == NL80211_AUTHTYPE_SAE) {
+		psecuritypriv->auth_alg = WLAN_AUTH_SAE;
+		return 0;
+	}
+
 	switch (sme_auth_type) {
 	case NL80211_AUTHTYPE_AUTOMATIC:
 
@@ -3292,9 +3297,6 @@ static int rtw_cfg80211_set_auth_type(struct security_priv *psecuritypriv,
 		psecuritypriv->ndisencryptstatus = Ndis802_11Encryption1Enabled;
 
 
-		break;
-	case NL80211_AUTHTYPE_SAE:
-		psecuritypriv->auth_alg = WLAN_AUTH_SAE;
 		break;
 	default:
 		psecuritypriv->dot11AuthAlgrthm = dot11AuthAlgrthm_Open;
@@ -3819,7 +3821,8 @@ static int cfg80211_rtw_connect(struct wiphy *wiphy, struct net_device *ndev,
 
 	if (rtw_check_connect_sae_compat(sme)) {
 		sme->auth_type = NL80211_AUTHTYPE_SAE;
-		RTW_INFO("%s set sme->auth_type=4 for SAE compat\n", __FUNCTION__);
+		RTW_INFO("%s set sme->auth_type=%d for SAE compat\n", __FUNCTION__,
+			 NL80211_AUTHTYPE_SAE);
 	}
 
 	if (pwdev_priv->block == _TRUE) {

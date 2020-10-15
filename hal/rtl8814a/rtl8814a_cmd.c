@@ -351,6 +351,40 @@ void rtl8814_set_BcnEarly_C2H_Rpt_cmd(PADAPTER padapter, u8 enable)
 #endif
 #endif
 
+void rtl8814a_set_FwPwrModeInIPS_cmd(PADAPTER padapter, u8 cmd_param)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+	u8 parm[H2C_INACTIVE_PS_LEN] = {0};
+
+	/* u8 cmd_param; */ /* BIT0:enable, BIT1:NoConnect32k */
+	if (cmd_param) {
+
+#ifdef CONFIG_BT_COEXIST
+		rtw_btcoex_IpsNotify(padapter, pwrpriv->ips_mode_req);
+#endif
+		/* Enter IPS */
+		RTW_INFO("%s: issue H2C to FW when entering IPS\n", __func__);
+
+		parm[0] = 0x1;/* suggest by Isaac.Hsu*/
+		
+		rtw_hal_fill_h2c_cmd(padapter, /* H2C_FWLPS_IN_IPS_, */
+				     H2C_INACTIVE_PS_,
+				     H2C_INACTIVE_PS_LEN, parm);
+	} else {
+		/* Leave IPS */
+		RTW_INFO("%s: Leaving IPS in FWLPS state\n", __func__);
+
+		parm[0] = 0x0;
+		parm[1] = 0x0;
+		parm[2] = 0x0;
+		rtw_hal_fill_h2c_cmd(padapter, H2C_INACTIVE_PS_,
+				     H2C_INACTIVE_PS_LEN, parm);
+#ifdef CONFIG_BT_COEXIST
+		rtw_btcoex_IpsNotify(padapter, IPS_NONE);
+#endif
+	}
+}
+
 /*
  * Description: Get the reserved page number in Tx packet buffer.
  * Retrun value: the page number.
