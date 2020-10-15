@@ -15,7 +15,6 @@
 #ifndef __RTW_SECURITY_H_
 #define __RTW_SECURITY_H_
 
-
 #define _NO_PRIVACY_		0x0
 #define _WEP40_				0x1
 #define _TKIP_				0x2
@@ -248,12 +247,6 @@ struct security_priv {
 #else
 #define SEC_IS_BIP_KEY_INSTALLED(sec) _FALSE
 #endif
-
-struct sha256_state {
-	u64 length;
-	u32 state[8], curlen;
-	u8 buf[64];
-};
 
 #define GET_ENCRY_ALGO(psecuritypriv, psta, encry_algo, bmcst)\
 	do {\
