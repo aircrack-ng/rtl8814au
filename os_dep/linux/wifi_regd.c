@@ -256,6 +256,7 @@ static void _rtw_reg_apply_active_scan_flags(struct wiphy *wiphy,
 
 void rtw_regd_apply_flags(struct wiphy *wiphy)
 {
+#ifndef CONFIG_DISABLE_REGD_C				// by channel plan
 	struct dvobj_priv *dvobj = wiphy_to_dvobj(wiphy);
 	struct rf_ctl_t *rfctl = dvobj_to_rfctl(dvobj);
 	RT_CHANNEL_INFO *channel_set = rfctl->channel_set;
@@ -318,6 +319,45 @@ void rtw_regd_apply_flags(struct wiphy *wiphy)
 		}
 		#endif /* CONFIG_DFS */
 	}
+#else
+	struct ieee80211_supported_band *sband;
+	struct ieee80211_channel *ch;
+	unsigned int i, j;
+	u16 channels[37] =
+	    { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 36, 40, 44, 48, 52, 56,
+		60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140,
+		149, 153,
+		157, 161, 165
+	};
+	u16 channel;
+	u32 freq;
+
+	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
+		sband = wiphy->bands[i];
+
+		if (sband)
+			for (j = 0; j < sband->n_channels; j++) {
+				ch = &sband->channels[j];
+
+				if (ch)
+					ch->flags = IEEE80211_CHAN_DISABLED;
+			}
+	}
+
+	for (i = 0; i < 37; i++) {
+		channel = channels[i];
+		freq = rtw_ch2freq(channel);
+
+		ch = ieee80211_get_channel(wiphy, freq);
+		if (ch) {
+			if (channel <= 11)
+				ch->flags = 0;
+			else
+				ch->flags = 0;	//IEEE80211_CHAN_PASSIVE_SCAN;
+		}
+		//printk("%s: freq %d(%d) flag 0x%02X \n", __func__, freq, channel, ch->flags);
+	}
+#endif
 }
 
 static const struct ieee80211_regdomain *_rtw_regdomain_select(struct

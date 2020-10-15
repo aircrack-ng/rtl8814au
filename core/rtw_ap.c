@@ -1786,7 +1786,10 @@ chbw_decision:
 		if (!(ifbmp_ch_changed & BIT(i)) || !pdvobj->padapters[i])
 			continue;
 
-		{
+		/* pure AP is not needed*/
+		if (MLME_IS_GO(pdvobj->padapters[i])
+			|| MLME_IS_MESH(pdvobj->padapters[i])
+		) {
 			u8 ht_option = 0;
 
 			#ifdef CONFIG_80211N_HT

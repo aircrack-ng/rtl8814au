@@ -2142,8 +2142,7 @@ unsigned int OnAuth(_adapter *padapter, union recv_frame *precv_frame)
 		/* pstat->capability = 0; */
 	} else {
 #ifdef CONFIG_IEEE80211W
-		if ((pstat->bpairwise_key_installed != _TRUE && (pstat->flags & WLAN_STA_MFP)) 
-			|| !(pstat->flags & WLAN_STA_MFP))
+		if (pstat->bpairwise_key_installed != _TRUE && !(pstat->state & WIFI_FW_ASSOC_SUCCESS))
 #endif /* CONFIG_IEEE80211W */
 		{
 
@@ -2163,8 +2162,7 @@ unsigned int OnAuth(_adapter *padapter, union recv_frame *precv_frame)
 	}
 
 #ifdef CONFIG_IEEE80211W
-	if ((pstat->bpairwise_key_installed != _TRUE && (pstat->flags & WLAN_STA_MFP)) 
-		|| !(pstat->flags & WLAN_STA_MFP))
+	if (pstat->bpairwise_key_installed != _TRUE && !(pstat->state & WIFI_FW_ASSOC_SUCCESS))
 #endif /* CONFIG_IEEE80211W */
 	{
 		_enter_critical_bh(&pstapriv->auth_list_lock, &irqL);
@@ -2201,8 +2199,7 @@ unsigned int OnAuth(_adapter *padapter, union recv_frame *precv_frame)
 	if (algorithm == 0 && (auth_mode == 0 || auth_mode == 2 || auth_mode == 3)) {
 		if (seq == 1) {
 #ifdef CONFIG_IEEE80211W
-			if ((pstat->bpairwise_key_installed != _TRUE && (pstat->flags & WLAN_STA_MFP)) 
-				|| !(pstat->flags & WLAN_STA_MFP))
+			if (pstat->bpairwise_key_installed != _TRUE && !(pstat->state & WIFI_FW_ASSOC_SUCCESS))
 #endif /* CONFIG_IEEE80211W */
 			{
 				pstat->state &= ~WIFI_FW_AUTH_NULL;
@@ -2223,8 +2220,7 @@ unsigned int OnAuth(_adapter *padapter, union recv_frame *precv_frame)
 			/* get_random_bytes((void *)pstat->chg_txt, 128); */ /* TODO: */
 			_rtw_memset((void *)pstat->chg_txt, 78, 128);
 #ifdef CONFIG_IEEE80211W
-			if ((pstat->bpairwise_key_installed != _TRUE && (pstat->flags & WLAN_STA_MFP)) 
-				|| !(pstat->flags & WLAN_STA_MFP))
+			if (pstat->bpairwise_key_installed != _TRUE && !(pstat->state & WIFI_FW_ASSOC_SUCCESS))
 #endif /* CONFIG_IEEE80211W */
 			{
 				pstat->state &= ~WIFI_FW_AUTH_NULL;
@@ -2247,8 +2243,7 @@ unsigned int OnAuth(_adapter *padapter, union recv_frame *precv_frame)
 
 			if (_rtw_memcmp((void *)(p + 2), pstat->chg_txt, 128)) {
 #ifdef CONFIG_IEEE80211W
-				if ((pstat->bpairwise_key_installed != _TRUE && (pstat->flags & WLAN_STA_MFP)) 
-					|| !(pstat->flags & WLAN_STA_MFP))
+				if (pstat->bpairwise_key_installed != _TRUE && !(pstat->state & WIFI_FW_ASSOC_SUCCESS))
 #endif /* CONFIG_IEEE80211W */
 				{
 					pstat->state &= (~WIFI_FW_AUTH_STATE);
@@ -2632,8 +2627,7 @@ unsigned int OnAssocReq(_adapter *padapter, union recv_frame *precv_frame)
 	/* RTW_INFO("==================%s, %d,  (%x), bpairwise_key_installed=%d, MAC:"MAC_FMT"\n"
 	, __func__, __LINE__, pstat->state, pstat->bpairwise_key_installed, MAC_ARG(pstat->cmn.mac_addr)); */
 #ifdef CONFIG_IEEE80211W
-	if ((pstat->bpairwise_key_installed != _TRUE && (pstat->flags & WLAN_STA_MFP)) 
-		|| !(pstat->flags & WLAN_STA_MFP))
+	if (pstat->bpairwise_key_installed != _TRUE)
 #endif /* CONFIG_IEEE80211W */
 	{
 		_enter_critical_bh(&pstapriv->auth_list_lock, &irqL);
@@ -2656,8 +2650,7 @@ unsigned int OnAssocReq(_adapter *padapter, union recv_frame *precv_frame)
 	if (pstat && (pstat->state & WIFI_FW_ASSOC_SUCCESS) && (_STATS_SUCCESSFUL_ == status)) {
 #ifdef CONFIG_NATIVEAP_MLME
 #ifdef CONFIG_IEEE80211W
-		if ((pstat->bpairwise_key_installed != _TRUE && (pstat->flags & WLAN_STA_MFP)) 
-			|| !(pstat->flags & WLAN_STA_MFP))
+		if (pstat->bpairwise_key_installed != _TRUE)
 #endif /* CONFIG_IEEE80211W */
 		{
 			/* .1 bss_cap_update & sta_info_update */
@@ -2665,7 +2658,7 @@ unsigned int OnAssocReq(_adapter *padapter, union recv_frame *precv_frame)
 			sta_info_update(padapter, pstat);
 		}
 #ifdef CONFIG_IEEE80211W
-		if (pstat->bpairwise_key_installed == _TRUE && (pstat->flags & WLAN_STA_MFP))
+		if (pstat->bpairwise_key_installed == _TRUE)
 			status = _STATS_REFUSED_TEMPORARILY_;
 #endif /* CONFIG_IEEE80211W */
 		/* .2 issue assoc rsp before notify station join event. */
@@ -2690,15 +2683,14 @@ unsigned int OnAssocReq(_adapter *padapter, union recv_frame *precv_frame)
 		_exit_critical_bh(&pstat->lock, &irqL);
 #endif /* CONFIG_IOCTL_CFG80211 */
 #ifdef CONFIG_IEEE80211W
-		if ((pstat->bpairwise_key_installed != _TRUE && (pstat->flags & WLAN_STA_MFP)) 
-			|| !(pstat->flags & WLAN_STA_MFP))
+		if (pstat->bpairwise_key_installed != _TRUE)
 #endif /* CONFIG_IEEE80211W */
 		{
 			/* .3-(1) report sta add event */
 			report_add_sta_event(padapter, pstat->cmn.mac_addr);
 		}
 #ifdef CONFIG_IEEE80211W
-		if (pstat->bpairwise_key_installed == _TRUE && (pstat->flags & WLAN_STA_MFP)) {
+		if (pstat->bpairwise_key_installed == _TRUE && SEC_IS_BIP_KEY_INSTALLED(&padapter->securitypriv) == _TRUE) {
 			RTW_INFO(MAC_FMT"\n", MAC_ARG(pstat->cmn.mac_addr));
 			issue_action_SA_Query(padapter, pstat->cmn.mac_addr, 0, 0, IEEE80211W_RIGHT_KEY);
 		}
@@ -16059,7 +16051,7 @@ void rtw_join_done_chk_ch(_adapter *adapter, int join_res)
 
 					rtw_start_bss_hdl_after_chbw_decided(iface);
 
-					{
+					if (MLME_IS_GO(iface) || MLME_IS_MESH(iface)) { /* pure AP is not needed*/
 						#if defined(CONFIG_IOCTL_CFG80211) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0))
 						u8 ht_option = 0;
 
