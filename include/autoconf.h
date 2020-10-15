@@ -31,7 +31,7 @@
 #define PLATFORM_LINUX
 
 
-/* #define CONFIG_IOCTL_CFG80211 1 */
+#define CONFIG_IOCTL_CFG80211 1
 
 #ifdef CONFIG_IOCTL_CFG80211
 	/* #define RTW_USE_CFG80211_STA_EVENT */ /* Indecate new sta asoc through cfg80211_new_sta */
@@ -75,7 +75,7 @@
 
 #define CONFIG_RF_POWER_TRIM
 
-#define CONFIG_DFS	1
+#define CONFIG_DFS	0
 
  /* #define CONFIG_SUPPORT_USB_INT */
  #ifdef CONFIG_SUPPORT_USB_INT
@@ -83,7 +83,7 @@
 #endif
 
 #ifdef CONFIG_POWER_SAVING
-	#define CONFIG_IPS	1
+//	#define CONFIG_IPS	1
 	#ifdef CONFIG_IPS
 	/* #define CONFIG_IPS_LEVEL_2	1 */ /* enable this to set default IPS mode to IPS_LEVEL_2	 */
 	#define CONFIG_IPS_CHECK_IN_WD /* Do IPS Check in WatchDog.	 */
@@ -299,6 +299,7 @@
 
 #define	RTL8188E_EARLY_MODE_PKT_NUM_10	0
 
+#define CONFIG_DISABLE_REGD_C
 
 /*
  * Debug Related Config
