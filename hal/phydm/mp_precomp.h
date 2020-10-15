@@ -22,3 +22,9 @@
  * Larry Finger <Larry.Finger@lwfinger.net>
  *
  *****************************************************************************/
+#ifndef __MP_PRECOMP_H__
+#define __MP_PRECOMP_H__
+
+#include "phydm_types.h"
+
+#endif // __MP_PRECOMP_H__
