@@ -897,8 +897,10 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 		u32 scan_timeout_ms;
 
 		pmlmepriv->scan_start_time = rtw_get_current_time();
+#if 0 /* looking at other wlan drivers, they do not handle timeout. It is conflicting with long scans */
 		scan_timeout_ms = rtw_scan_timeout_decision(padapter);
 		mlme_set_scan_to_timer(pmlmepriv,scan_timeout_ms);
+#endif
 
 		rtw_led_control(padapter, LED_CTL_SITE_SURVEY);
 	} else
@@ -1326,7 +1328,7 @@ static void rtw_ft_validate_akm_type(_adapter  *padapter,
 			pft_roam->mdid = *(u16 *)(ptmp+2);
 			pft_roam->ft_cap = *(ptmp+4);
 
-			RTW_INFO("FT: target " MAC_FMT " mdid=(0x%2x), capacity=(0x%2x)\n", 
+			RTW_INFO("FT: target " MAC_FMT " mdid=(0x%2x), capacity=(0x%2x)\n",
 				MAC_ARG(pnetwork->network.MacAddress), pft_roam->mdid, pft_roam->ft_cap);
 			rtw_ft_set_flags(padapter, RTW_FT_PEER_EN);
 
@@ -1341,7 +1343,7 @@ static void rtw_ft_validate_akm_type(_adapter  *padapter,
 		/* It could be a non-FT connection */
 		rtw_ft_clr_flags(padapter, (RTW_FT_PEER_EN|RTW_FT_PEER_OTD_EN));
 		rtw_ft_reset_status(padapter);
-	}	
+	}
 }
 #endif
 
@@ -1461,9 +1463,9 @@ u8 rtw_joinbss_cmd(_adapter  *padapter, struct wlan_network *pnetwork)
 	pqospriv->qos_option = 0;
 
 	if (pregistrypriv->wmm_enable) {
-#ifdef CONFIG_WMMPS_STA	
+#ifdef CONFIG_WMMPS_STA
 		rtw_uapsd_use_default_setting(padapter);
-#endif /* CONFIG_WMMPS_STA */		
+#endif /* CONFIG_WMMPS_STA */
 		tmp_len = rtw_restruct_wmm_ie(padapter, &pnetwork->network.IEs[0], &psecnetwork->IEs[0], pnetwork->network.IELength, psecnetwork->IELength);
 
 		if (psecnetwork->IELength != tmp_len) {
@@ -1615,7 +1617,7 @@ u8 rtw_stop_ap_cmd(_adapter  *adapter, u8 flags)
 		parm->type = 0;
 		parm->size = 0;
 		parm->pbuf = NULL;
-		
+
 		/* need enqueue, prepare cmd_obj and enqueue */
 		cmdobj = (struct cmd_obj *)rtw_zmalloc(sizeof(*cmdobj));
 		if (cmdobj == NULL) {

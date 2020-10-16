@@ -1645,8 +1645,6 @@ static int rtw_ndev_notifier_call(struct notifier_block *nb, unsigned long state
 	switch (state) {
 	case NETDEV_CHANGENAME:
 		rtw_adapter_proc_replace(ndev);
-		strncpy(adapter->old_ifname, ndev->name, IFNAMSIZ);
-		adapter->old_ifname[IFNAMSIZ-1] = 0;
 		break;
 	#ifdef CONFIG_NEW_NETDEV_HDL
 	case NETDEV_PRE_UP :
