@@ -6007,6 +6007,116 @@ static int	cfg80211_rtw_set_txq_params(struct wiphy *wiphy
 }
 #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)) */
 
+static int cfg80211_rtw_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev, struct cfg80211_chan_def *chandef){
+  _adapter *padapter= wiphy_to_adapter(wiphy);
+  int channel;
+  int control_freq;
+  int center_freq;
+  int center_freq2=0;
+  int width;
+  int band;
+  int bandWidth;
+  int offset;
+
+  struct dvobj_priv *dvobj;
+  struct net_device *ndev = wdev->netdev;
+  HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
+  if (!ndev)
+    return -ENODEV;
+
+  offset = rtw_get_oper_choffset(padapter);
+  channel = adapter_to_dvobj(padapter)->oper_channel;
+  if (channel >= 1) {
+    switch (pHalData->current_band_type) {
+      case 0:
+	band = NL80211_BAND_2GHZ;
+	break;
+      case 1:
+	band = NL80211_BAND_5GHZ;
+	break;
+      default:
+	return -EINVAL;
+
+    }
+    control_freq =  ieee80211_channel_to_frequency(channel, band);
+
+    dvobj=adapter_to_dvobj(padapter);
+    if (dvobj!=NULL) {
+      bandWidth = adapter_to_dvobj(padapter)->oper_bwmode;
+      //DBG_871X("%s bw %d\n", __func__,adapter_to_dvobj(padapter)->oper_bwmode);
+    } else {
+      bandWidth = pHalData->current_channel;
+      //DBG_871X("%s dvobj null\n", __func__);
+    }
+    switch(pHalData->current_channel){
+      case CHANNEL_WIDTH_20:
+	//DBG_871X("%s width 20\n", __func__);
+	width = NL80211_CHAN_WIDTH_20;
+	center_freq = control_freq;
+	break;
+      case CHANNEL_WIDTH_40:
+	//DBG_871X("%s width 40\n", __func__);
+	width = NL80211_CHAN_WIDTH_40;
+	if (offset==HAL_PRIME_CHNL_OFFSET_LOWER) {
+	  center_freq = control_freq +10;
+	} else {
+	  center_freq = control_freq -10;
+	}
+	break;
+      case CHANNEL_WIDTH_80:
+	//DBG_871X("%s width 80\n", __func__);
+	width = NL80211_CHAN_WIDTH_80;
+	if (offset==HAL_PRIME_CHNL_OFFSET_LOWER) {
+	  center_freq = control_freq +30;
+	} else {
+	  center_freq = control_freq -30;
+	}
+	break;
+      case CHANNEL_WIDTH_160:
+	//DBG_871X("%s width 160\n", __func__);
+	width = NL80211_CHAN_WIDTH_160;
+	if (offset==HAL_PRIME_CHNL_OFFSET_LOWER) {
+	  center_freq = control_freq +50;
+	} else {
+	  center_freq = control_freq -50;
+	}
+	break;
+      case CHANNEL_WIDTH_80_80:
+	//DBG_871X("%s width 80x80\n", __func__);
+	width = NL80211_CHAN_WIDTH_80P80;
+	if (offset==HAL_PRIME_CHNL_OFFSET_LOWER) {
+	  center_freq = control_freq +30;
+	  center_freq2=center_freq+80;
+	} else {
+	  center_freq = control_freq -30;
+	  center_freq2=center_freq-80;
+	}
+	break;
+      case CHANNEL_WIDTH_MAX:
+	//DBG_871X("%s width max\n", __func__);
+	width = NL80211_CHAN_WIDTH_160;
+	break;
+    }
+    chandef->chan = ieee80211_get_channel(wiphy, control_freq);
+    if (chandef->chan == NULL) {
+      chandef->chan = ieee80211_get_channel(wiphy, ieee80211_channel_to_frequency(channel, band));
+      //DBG_871X("%s chan null\n", __func__);
+      if (chandef->chan == NULL) {
+	//DBG_871X("%s chan null\n", __func__);
+	return -EINVAL;
+      }
+    }
+    chandef->width = width;
+    chandef->center_freq1 = center_freq;
+    chandef->center_freq2 = center_freq2;
+    //DBG_871X("%s : channel %d width %d freq1 %d freq2 %d center_freq %d offset %d\n", __func__, channel, width, chandef->center_freq1, chandef->center_freq2, chandef->chan->center_freq,rtw_get_oper_choffset(padapter));
+  } else {
+      return -EINVAL;
+  }
+  return 0;
+
+}
+
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0))
 static int	cfg80211_rtw_set_channel(struct wiphy *wiphy
 	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
@@ -10043,6 +10153,7 @@ static struct cfg80211_ops rtw_cfg80211_ops = {
 	.suspend = cfg80211_rtw_suspend,
 	.resume = cfg80211_rtw_resume,
 #endif /* CONFIG_PNO_SUPPORT */
+	.get_channel = cfg80211_rtw_get_channel,
 #ifdef CONFIG_RFKILL_POLL
 	.rfkill_poll = cfg80211_rtw_rfkill_poll,
 #endif
