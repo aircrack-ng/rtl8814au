@@ -498,6 +498,7 @@ struct registry_priv {
 #endif
 	u8 monitor_overwrite_seqnum;
 	u8 monitor_retransmit;
+	u8 monitor_disable_1m;
 };
 
 /* For registry parameters */

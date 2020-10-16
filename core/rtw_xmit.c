@@ -4453,6 +4453,7 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	struct xmit_frame		*pmgntframe;
 	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
 	struct xmit_priv	*pxmitpriv = &(padapter->xmitpriv);
+	struct registry_priv	*pregpriv = &(padapter->registrypriv);
 	unsigned char	*pframe;
 	u8 dummybuf[32];
 	int len = skb->len, rtap_len;
@@ -4494,27 +4495,38 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 
 	/* Check DATA/MGNT frames */
 	pwlanhdr = (struct rtw_ieee80211_hdr *)pframe;
-	frame_ctl = le16_to_cpu(pwlanhdr->frame_ctl);
-	if ((frame_ctl & RTW_IEEE80211_FCTL_FTYPE) == RTW_IEEE80211_FTYPE_DATA) {
+	pattrib = &pmgntframe->attrib;
 
-		pattrib = &pmgntframe->attrib;
-		pattrib->injected = _TRUE;
-		update_monitor_frame_attrib(padapter, pattrib);
+	if (pregpriv->monitor_disable_1m) {
+		frame_ctl = le16_to_cpu(pwlanhdr->frame_ctl);
+		if ((frame_ctl & RTW_IEEE80211_FCTL_FTYPE) == RTW_IEEE80211_FTYPE_DATA) {
 
-		if (is_broadcast_mac_addr(pwlanhdr->addr3) || is_broadcast_mac_addr(pwlanhdr->addr1))
-			pattrib->rate = MGN_24M;
+			update_monitor_frame_attrib(padapter, pattrib);
+
+			if (is_broadcast_mac_addr(pwlanhdr->addr3) || is_broadcast_mac_addr(pwlanhdr->addr1))
+				pattrib->rate = MGN_24M;
+		} else {
+			update_mgntframe_attrib(padapter, pattrib);
+		}
+
+	pattrib->injected = _TRUE;
 
 	} else {
-
-		pattrib = &pmgntframe->attrib;
 		pattrib->injected = _TRUE;
 		update_mgntframe_attrib(padapter, pattrib);
 
+
+		pattrib->rate = MGN_1M;
+
+		pattrib->ldpc = _FALSE;
+		pattrib->stbc = 0;
 	}
-	//if (pregpriv->monitor_retransmit)
-	//	pattrib->retry_ctrl = _TRUE;
-	//else
-	pattrib->retry_ctrl = _FALSE;
+
+	if (pregpriv->monitor_retransmit)
+		pattrib->retry_ctrl = _TRUE;
+	else
+		pattrib->retry_ctrl = _FALSE;
+
 	pattrib->pktlen = len;
 	pmlmeext->mgnt_seq = GetSequence(pwlanhdr);
 	pattrib->seqnum = pmlmeext->mgnt_seq;
