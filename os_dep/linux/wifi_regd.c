@@ -88,6 +88,7 @@ static const struct ieee80211_regdomain rtw_regdom_11 = {
 	.alpha2 = "99",
 	.reg_rules = {
 		RTW_2GHZ_CH01_11,
+		RTW_2GHZ_CH12_13,
 	}
 };
 
