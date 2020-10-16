@@ -4441,7 +4441,22 @@ static void do_queue_select(_adapter	*padapter, struct pkt_attrib *pattrib)
  *	0	success, hardware will handle this xmit frame(packet)
  *	<0	fail
  */
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
+static struct xmit_frame* monitor_alloc_mgtxmitframe(struct xmit_priv *pxmitpriv) {
+	int tries;
+	int delay = 300;
+	struct xmit_frame *pmgntframe = NULL;
+
+	for(tries = 3; tries >= 0; tries--) {
+		pmgntframe = alloc_mgtxmitframe(pxmitpriv);
+		if(pmgntframe != NULL)
+			return pmgntframe;
+		rtw_udelay_os(delay);
+		delay += delay/2;
+	}
+	return NULL;
+}
+
 s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 {
 	u16 frame_ctl;
@@ -4473,6 +4488,11 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 
 	if (unlikely(skb->len < rtap_len))
 		goto fail;
+
+	if ((pmgntframe = monitor_alloc_mgtxmitframe(pxmitpriv)) == NULL) {
+		DBG_COUNTER(padapter->tx_logs.core_tx_err_pxmitframe);
+		return NETDEV_TX_BUSY;
+	}
 
 	len -= sizeof(struct ieee80211_radiotap_header);
 	rtap_len -= sizeof(struct ieee80211_radiotap_header);
@@ -4537,10 +4557,11 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	pattrib->last_txcmdsz = pattrib->pktlen;
 
 	dump_mgntframe(padapter, pmgntframe);
+	DBG_COUNTER(padapter->tx_logs.core_tx);
 
 fail:
 	rtw_skb_free(skb);
-	return 0;
+	return NETDEV_TX_OK;
 }
 #endif
 
