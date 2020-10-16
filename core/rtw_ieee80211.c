@@ -1645,6 +1645,7 @@ err_chk:
 		mac[4] = 0x00;
 		mac[5] = 0x00;
 #endif
+
 	}
 
 	_rtw_memcpy(out, mac, ETH_ALEN);

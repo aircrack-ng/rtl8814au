@@ -4304,6 +4304,7 @@ void rtw_cfg80211_indicate_sta_assoc(_adapter *padapter, u8 *pmgmt_frame, uint f
 		sinfo.filled = STATION_INFO_ASSOC_REQ_IES;
 		sinfo.assoc_req_ies = pmgmt_frame + WLAN_HDR_A3_LEN + ie_offset;
 		sinfo.assoc_req_ies_len = frame_len - WLAN_HDR_A3_LEN - ie_offset;
+		cfg80211_sinfo_alloc_tid_stats(&sinfo, GFP_KERNEL);
 		cfg80211_new_sta(ndev, get_addr2_ptr(pmgmt_frame), &sinfo, GFP_ATOMIC);
 	}
 #else /* defined(RTW_USE_CFG80211_STA_EVENT) */
@@ -5924,7 +5925,11 @@ static int	cfg80211_rtw_set_channel(struct wiphy *wiphy
 	//RTW_INFO(FUNC_ADPT_FMT" ch:%d bw:%d, offset:%d\n"
 	//	, FUNC_ADPT_ARG(padapter), chan_target, chan_width, chan_offset);
 
+	//padapter->mlmeextpriv.cur_channel = target_channel;
+	//rtw_ps_deny(padapter, PS_DENY_IOCTL);
+	//LeaveAllPowerSaveModeDirect(padapter); /* leave PS mode for guaranteeing to access hw register successfully */
 	rtw_set_chbw_cmd(padapter, chan_target, chan_width, chan_offset, RTW_CMDF_WAIT_ACK);
+	//rtw_ps_deny_cancel(padapter, PS_DENY_IOCTL);
 
 	return 0;
 }
@@ -6024,7 +6029,10 @@ static int cfg80211_rtw_set_monitor_channel(struct wiphy *wiphy
 	RTW_INFO(FUNC_ADPT_FMT" ch:%d bw:%d, offset:%d\n"
 		, FUNC_ADPT_ARG(padapter), target_channal, target_width, target_offset);
 
+	//padapter->mlmeextpriv.cur_channel = target_channel;
+	//rtw_ps_deny(padapter, PS_DENY_IOCTL);
 	rtw_set_chbw_cmd(padapter, target_channal, target_width, target_offset, RTW_CMDF_WAIT_ACK);
+	//rtw_ps_deny_cancel(padapter, PS_DENY_IOCTL);
 
 	return 0;
 }
