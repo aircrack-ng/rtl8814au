@@ -4905,7 +4905,11 @@ static int cfg80211_rtw_del_virtual_intf(struct wiphy *wiphy,
 		pwdev_priv = adapter_wdev_data(adapter);
 
 		if (ndev == pwdev_priv->pmon_ndev) {
-			unregister_netdevice(ndev);
+	/* unregister only monitor device
+	 * because only monitor can be added
+	 */
+	if(wdev->iftype == NL80211_IFTYPE_MONITOR)
+		unregister_netdevice(ndev);
 			pwdev_priv->pmon_ndev = NULL;
 			pwdev_priv->ifname_mon[0] = '\0';
 			RTW_INFO(FUNC_NDEV_FMT" remove monitor ndev\n", FUNC_NDEV_ARG(ndev));
