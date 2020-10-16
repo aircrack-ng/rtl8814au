@@ -24,12 +24,9 @@
 #define RTL871X_MODULE_NAME "8814AU"
 #define DRV_NAME "rtl8814au"
 
-
 #define CONFIG_USB_HCI
 
-
 #define PLATFORM_LINUX
-
 
 #define CONFIG_IOCTL_CFG80211 1
 
@@ -66,7 +63,6 @@
 	#endif
 #endif
 
-
 #ifdef CONFIG_80211AC_VHT
 	#define CONFIG_BEAMFORMING
 #endif
@@ -100,8 +96,6 @@
 	#endif
 #endif /*CONFIG_POWER_SAVING*/
 	/*#define CONFIG_ANTENNA_DIVERSITY*/
-
-
 
 	/* #define CONFIG_CONCURRENT_MODE 1 */
 	#ifdef CONFIG_CONCURRENT_MODE
@@ -161,7 +155,6 @@
 	/* #define CONFIG_TDLS_CH_SW */	/* Enable this flag only when we confirm that TDLS CH SW is supported in FW */
 #endif
 
-
 #define CONFIG_SKB_COPY	1/* for amsdu */
 
 #define CONFIG_RTW_LED
@@ -186,7 +179,6 @@
 /* #define CONFIG_BACKGROUND_NOISE_MONITOR */
 #endif
 #define RTW_NOTCH_FILTER 0 /* 0:Disable, 1:Enable, */
-
 
 /*
  * Interface  Related Config
@@ -265,11 +257,9 @@
 	#define MP_DRIVER 0
 #endif
 
-
 /*
  * Platform  Related Config
  */
-
 
 #if defined(CONFIG_PLATFORM_ACTIONS_ATM702X)
 	#ifdef CONFIG_USB_TX_AGGREGATION
@@ -292,7 +282,6 @@
 #endif /* !CONFIG_BT_COEXIST */
 
 
-
 #ifdef CONFIG_USB_TX_AGGREGATION
 /* #define	CONFIG_TX_EARLY_MODE */
 #endif
@@ -303,7 +292,7 @@
 /*
  * Debug Related Config
  */
-#define DBG	1
+#define DBG	0
 
 #define DBG_CONFIG_ERROR_DETECT
 /* #define DBG_CONFIG_ERROR_DETECT_INT */
@@ -323,8 +312,6 @@
 /* #define DBG_RX_SEQ */
 /* #define DBG_RX_SIGNAL_DISPLAY_PROCESSING */
 /* #define DBG_RX_SIGNAL_DISPLAY_SSID_MONITORED "jeff-ap" */
-
-
 
 /* #define DBG_SHOW_MCUFWDL_BEFORE_51_ENABLE */
 /* #define DBG_ROAMING_TEST */

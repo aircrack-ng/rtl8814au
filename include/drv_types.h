@@ -497,6 +497,7 @@ struct registry_priv {
 	u8 peer_alive_based_preq;
 #endif
 	u8 monitor_overwrite_seqnum;
+	u8 monitor_retransmit;
 };
 
 /* For registry parameters */

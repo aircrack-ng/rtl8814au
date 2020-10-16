@@ -5902,8 +5902,8 @@ static int	cfg80211_rtw_set_channel(struct wiphy *wiphy
 		break;
 	}
 
-	RTW_INFO(FUNC_ADPT_FMT" ch:%d bw:%d, offset:%d\n"
-		, FUNC_ADPT_ARG(padapter), chan_target, chan_width, chan_offset);
+	//RTW_INFO(FUNC_ADPT_FMT" ch:%d bw:%d, offset:%d\n"
+	//	, FUNC_ADPT_ARG(padapter), chan_target, chan_width, chan_offset);
 
 	rtw_set_chbw_cmd(padapter, chan_target, chan_width, chan_offset, RTW_CMDF_WAIT_ACK);
 
@@ -5931,7 +5931,7 @@ static int cfg80211_rtw_set_monitor_channel(struct wiphy *wiphy
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
 #ifdef CONFIG_DEBUG_CFG80211
-	RTW_INFO("center_freq %u Mhz ch %u width %u freq1 %u freq2 %u\n"
+	//RTW_INFO("center_freq %u Mhz ch %u width %u freq1 %u freq2 %u\n"
 		, chan->center_freq
 		, chan->hw_value
 		, chandef->width
@@ -9432,6 +9432,10 @@ static void rtw_cfg80211_preinit_wiphy(_adapter *adapter, struct wiphy *wiphy)
 #ifdef CONFIG_IEEE80211_BAND_5GHZ
 	if (is_supported_5g(adapter->registrypriv.wireless_mode))
 		wiphy->bands[NL80211_BAND_5GHZ] = rtw_spt_band_alloc(BAND_ON_5G);
+#endif
+
+#if defined(CONFIG_NET_NS)
+	wiphy->flags |= WIPHY_FLAG_NETNS_OK;
 #endif
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38) && LINUX_VERSION_CODE < KERNEL_VERSION(3, 0, 0))

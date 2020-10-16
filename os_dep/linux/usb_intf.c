@@ -1423,7 +1423,7 @@ static void rtw_usb_primary_adapter_deinit(_adapter *padapter)
 
 	rtw_dev_unload(padapter);
 
-	RTW_INFO("+r871xu_dev_remove, hw_init_completed=%d\n", rtw_get_hw_init_completed(padapter));
+	//RTW_INFO("+r871xu_dev_remove, hw_init_completed=%d\n", rtw_get_hw_init_completed(padapter));
 
 #ifdef CONFIG_BT_COEXIST
 	if (1 == pwrctl->autopm_cnt) {
@@ -1556,7 +1556,7 @@ static void rtw_dev_remove(struct usb_interface *pusb_intf)
 #endif
 	_adapter *padapter = dvobj_get_primary_adapter(dvobj);
 
-	RTW_INFO("+rtw_dev_remove\n");
+	//RTW_INFO("+rtw_dev_remove\n");
 
 	dvobj->processing_dev_remove = _TRUE;
 
@@ -1606,7 +1606,7 @@ static void rtw_dev_remove(struct usb_interface *pusb_intf)
 
 	usb_dvobj_deinit(pusb_intf);
 
-	RTW_INFO("-r871xu_dev_remove, done\n");
+	//RTW_INFO("-r871xu_dev_remove, done\n");
 
 	return;
 

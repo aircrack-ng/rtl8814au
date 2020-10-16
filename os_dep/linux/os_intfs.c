@@ -90,6 +90,10 @@ int rtw_monitor_overwrite_seqnum = 0;
 module_param(rtw_monitor_overwrite_seqnum, int, 0644);
 MODULE_PARM_DESC(rtw_monitor_overwrite_seqnum, "Overwrite the sequence number of injected frames");
 
+int rtw_monitor_retransmit = 0;
+module_param(rtw_monitor_retransmit, int, 0644);
+MODULE_PARM_DESC(rtw_monitor_retransmit, "Retransmit injected frames");
+
 #ifdef CONFIG_NARROWBAND_SUPPORTING
 int rtw_nb_config = CONFIG_NB_VALUE;
 module_param(rtw_nb_config, int, 0644);
@@ -1410,6 +1414,7 @@ uint loadparam(_adapter *padapter)
 	registry_par->peer_alive_based_preq = rtw_peer_alive_based_preq;
 #endif
 	registry_par->monitor_overwrite_seqnum = (u8)rtw_monitor_overwrite_seqnum;
+	registry_par->monitor_retransmit = (u8)rtw_monitor_retransmit;
 	return status;
 }
 
