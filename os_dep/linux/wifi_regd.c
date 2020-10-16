@@ -213,6 +213,7 @@ static void _rtw_reg_apply_active_scan_flags(struct wiphy *wiphy,
 		enum nl80211_reg_initiator
 		initiator)
 {
+#ifndef CONFIG_DISABLE_REGD_C
 	struct ieee80211_supported_band *sband;
 	struct ieee80211_channel *ch;
 	const struct ieee80211_reg_rule *reg_rule;
@@ -261,6 +262,7 @@ static void _rtw_reg_apply_active_scan_flags(struct wiphy *wiphy,
 	}
 }
 #endif
+#endif // CONFIG_DISABLE_REGD_C
 
 void rtw_regd_apply_flags(struct wiphy *wiphy)
 {
