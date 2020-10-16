@@ -41,13 +41,27 @@
 #define STATION_INFO_PLINK_STATE	BIT(NL80211_STA_INFO_PLINK_STATE)
 #define STATION_INFO_SIGNAL			BIT(NL80211_STA_INFO_SIGNAL)
 #define STATION_INFO_TX_BITRATE		BIT(NL80211_STA_INFO_TX_BITRATE)
+#define STATION_INFO_TX_BITRATE_BW_5	BIT(RATE_INFO_BW_5)
+#define STATION_INFO_TX_BITRATE_BW_10	BIT(RATE_INFO_BW_10)
+#define STATION_INFO_TX_BITRATE_BW_20	BIT(RATE_INFO_BW_20)
+#define STATION_INFO_TX_BITRATE_BW_40	BIT(RATE_INFO_BW_40)
+#define STATION_INFO_TX_BITRATE_BW_80	BIT(RATE_INFO_BW_80)
+#define STATION_INFO_TX_BITRATE_BW_160	BIT(RATE_INFO_BW_160)
 #define STATION_INFO_RX_PACKETS		BIT(NL80211_STA_INFO_RX_PACKETS)
 #define STATION_INFO_TX_PACKETS		BIT(NL80211_STA_INFO_TX_PACKETS)
 #define STATION_INFO_TX_FAILED		BIT(NL80211_STA_INFO_TX_FAILED)
 #define STATION_INFO_LOCAL_PM		BIT(NL80211_STA_INFO_LOCAL_PM)
 #define STATION_INFO_PEER_PM		BIT(NL80211_STA_INFO_PEER_PM)
 #define STATION_INFO_NONPEER_PM		BIT(NL80211_STA_INFO_NONPEER_PM)
+#define STATION_INFO_RX_BYTES		BIT(NL80211_STA_INFO_RX_BYTES)
+#define STATION_INFO_TX_BYTES		BIT(NL80211_STA_INFO_TX_BYTES)
 #define STATION_INFO_ASSOC_REQ_IES	0
+#define STATION_INFO_BSS_PARAM			BIT(NL80211_STA_INFO_BSS_PARAM)
+#define STATION_INFO_BSS_PARAM_CTS_PROT		BIT(NL80211_STA_BSS_PARAM_CTS_PROT)
+#define STATION_INFO_BSS_PARAM_SHORT_PREAMBLE	BIT(NL80211_STA_BSS_PARAM_SHORT_PREAMBLE)
+#define STATION_INFO_BSS_PARAM_SHORT_SLOT_TIME	BIT(NL80211_STA_BSS_PARAM_SHORT_SLOT_TIME)
+#define STATION_INFO_BSS_PARAM_DTIM_PERIOD	BIT(NL80211_STA_BSS_PARAM_DTIM_PERIOD)
+#define STATION_INFO_BSS_PARAM_BEACON_INTERVAL	BIT(NL80211_STA_BSS_PARAM_BEACON_INTERVAL)
 #endif /* Linux kernel >= 4.0.0 */
 
 #include <rtw_wifi_regd.h>
@@ -2241,6 +2255,7 @@ static int cfg80211_rtw_get_station(struct wiphy *wiphy,
 		&& check_fwstate(pmlmepriv, _FW_LINKED)
 	) {
 		struct wlan_network  *cur_network = &(pmlmepriv->cur_network);
+		struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(padapter);
 
 		if (_rtw_memcmp((u8 *)mac, cur_network->network.MacAddress, ETH_ALEN) == _FALSE) {
 			RTW_INFO("%s, mismatch bssid="MAC_FMT"\n", __func__, MAC_ARG(cur_network->network.MacAddress));
@@ -2264,12 +2279,97 @@ static int cfg80211_rtw_get_station(struct wiphy *wiphy,
 		}
 		sinfo->filled |= STATION_INFO_INACTIVE_TIME;
 		sinfo->inactive_time = rtw_get_passing_time_ms(psta->sta_stats.last_rx_time);
+
+		/* to-do set the txrate flags */
+		// for example something like:
+		//sinfo->txrate.flags |= NL80211_RATE_INFO_VHT_NSS;
+		//sinfo->txrate.nss = rtw_vht_mcsmap_to_nss(psta->vhtpriv.vht_mcs_map);
+
+
+		/* bw_mode is more delicate
+		   sinfo->txrate.bw is flagged
+		   psta->bw_mode */
+
+		/*
+		sinfo->txrate.bw = psta->bw_mode;
+		sinfo->txrate.flags |= psta->bw_mode;
+		printk("rtw_get_current_tx_sgi: %i", rtw_get_current_tx_sgi(padapter, mac));
+		printk("NSS: %i", rtw_vht_mcsmap_to_nss(psta->vhtpriv.vht_mcs_map));
+		printk("BW MODE: %i", psta->bw_mode);
+		printk("5 10 20 40 80 160: %i %i %i %i %i %i", STATION_INFO_TX_BITRATE_BW_5, STATION_INFO_TX_BITRATE_BW_10, STATION_INFO_TX_BITRATE_BW_20, STATION_INFO_TX_BITRATE_BW_40, STATION_INFO_TX_BITRATE_BW_80, STATION_INFO_TX_BITRATE_BW_160);
+		printk("5 10 20 40 80 160: %i %i %i %i %i %i", RATE_INFO_BW_5, RATE_INFO_BW_10, RATE_INFO_BW_20, RATE_INFO_BW_40, RATE_INFO_BW_80, RATE_INFO_BW_160);
+		*/
+
+		sinfo->filled |= STATION_INFO_RX_BYTES;
+		sinfo->rx_bytes = psta->sta_stats.rx_bytes;
+
+		sinfo->filled |= STATION_INFO_TX_BYTES;
+		sinfo->tx_bytes = psta->sta_stats.tx_bytes;
+
 		sinfo->filled |= STATION_INFO_RX_PACKETS;
 		sinfo->rx_packets = sta_rx_data_pkts(psta);
 		sinfo->filled |= STATION_INFO_TX_PACKETS;
 		sinfo->tx_packets = psta->sta_stats.tx_pkts;
 		sinfo->filled |= STATION_INFO_TX_FAILED;
 		sinfo->tx_failed = psta->sta_stats.tx_fail_cnt;
+
+
+		sinfo->filled |= STATION_INFO_BSS_PARAM;
+
+#if defined (LINUX_VERSION_CODE) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 20, 0))
+		if (!psta->no_short_preamble_set)
+		  sinfo->bss_param.flags |= STATION_INFO_BSS_PARAM_SHORT_PREAMBLE;
+
+		if (!psta->no_short_slot_time_set)
+		  sinfo->bss_param.flags |= STATION_INFO_BSS_PARAM_SHORT_SLOT_TIME;
+
+		/* no idea how to check this yet */
+		if (0)
+		  sinfo->bss_param.flags |= STATION_INFO_BSS_PARAM_CTS_PROT;
+
+		/* is this actually the dtim_period? */
+		sinfo->bss_param.flags |= STATION_INFO_BSS_PARAM_DTIM_PERIOD;
+		//sinfo->bss_param.dtim_period = pwrctl->vif.bss_conf.dtim_period;
+
+		// kimocoder: this one below needs attention
+		//sinfo->bss_param.beacon_interval = get_beacon_interval(&cur_network->network);
+
+		/*
+		sinfo->sta_flags.mask = BIT(NL80211_STA_FLAG_AUTHORIZED) |
+					BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) |
+					BIT(NL80211_STA_FLAG_WME) |
+					BIT(NL80211_STA_FLAG_MFP) |
+					BIT(NL80211_STA_FLAG_AUTHENTICATED) |
+					BIT(NL80211_STA_FLAG_ASSOCIATED) |
+					BIT(NL80211_STA_FLAG_TDLS_PEER);
+		if (test_sta_flag(sta, WLAN_STA_AUTHORIZED))
+			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_AUTHORIZED);
+		if (test_sta_flag(sta, WLAN_STA_SHORT_PREAMBLE))
+			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_SHORT_PREAMBLE);
+		if (sta->sta.wme)
+			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_WME);
+		if (test_sta_flag(sta, WLAN_STA_MFP))
+			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_MFP);
+		if (test_sta_flag(sta, WLAN_STA_AUTH))
+			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_AUTHENTICATED);
+		if (test_sta_flag(sta, WLAN_STA_ASSOC))
+			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_ASSOCIATED);
+		if (test_sta_flag(sta, WLAN_STA_TDLS_PEER))
+			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
+		*/
+
+		/* check if the driver has a SW RC implementation */
+		//if (ref && ref->ops->get_expected_throughput)
+		//	thr = ref->ops->get_expected_throughput(sta->rate_ctrl_priv);
+		//else
+		//	thr = drv_get_expected_throughput(local, &sta->sta);
+
+		//if (thr != 0) {
+		//	sinfo->filled |= BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
+		//	sinfo->expected_throughput = thr;
+
+
+#endif
 	}
 
 #ifdef CONFIG_RTW_MESH
@@ -5767,7 +5867,7 @@ static int	cfg80211_rtw_dump_station(struct wiphy *wiphy, struct net_device *nde
 	else
 		_rtw_memcpy(mac, plink->addr, ETH_ALEN);
 	#endif
-	
+
 	sinfo->filled = 0;
 
 	if (psta) {
