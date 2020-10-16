@@ -291,7 +291,7 @@ void rtw_ps_processor(_adapter *padapter)
 	ps_deny = rtw_ps_deny_get(padapter);
 	_exit_pwrlock(&adapter_to_pwrctl(padapter)->lock);
 	if (ps_deny != 0) {
-		RTW_INFO(FUNC_ADPT_FMT ": ps_deny=0x%08X, skip power save!\n",
+		RTW_DBG(FUNC_ADPT_FMT ": ps_deny=0x%08X, skip power save!\n",
 			 FUNC_ADPT_ARG(padapter), ps_deny);
 		goto exit;
 	}
