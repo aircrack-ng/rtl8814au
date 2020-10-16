@@ -72,7 +72,7 @@ int rtw_scan_mode = 1;/* active, passive */
 #else
 	int rtw_wow_power_mgnt = PS_MODE_ACTIVE;
 	int rtw_wow_lps_level = LPS_NORMAL;
-#endif	
+#endif
 #endif /* CONFIG_WOWLAN */
 
 #else /* !CONFIG_POWER_SAVING */
@@ -85,6 +85,10 @@ int rtw_scan_mode = 1;/* active, passive */
 	int rtw_wow_lps_level = LPS_NORMAL;
 #endif /* CONFIG_WOWLAN */
 #endif /* CONFIG_POWER_SAVING */
+
+int rtw_monitor_overwrite_seqnum = 0;
+module_param(rtw_monitor_overwrite_seqnum, int, 0644);
+MODULE_PARM_DESC(rtw_monitor_overwrite_seqnum, "Overwrite the sequence number of injected frames");
 
 #ifdef CONFIG_NARROWBAND_SUPPORTING
 int rtw_nb_config = CONFIG_NB_VALUE;
@@ -1405,6 +1409,7 @@ uint loadparam(_adapter *padapter)
 #ifdef CONFIG_RTW_MESH
 	registry_par->peer_alive_based_preq = rtw_peer_alive_based_preq;
 #endif
+	registry_par->monitor_overwrite_seqnum = (u8)rtw_monitor_overwrite_seqnum;
 	return status;
 }
 

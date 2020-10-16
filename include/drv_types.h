@@ -496,6 +496,7 @@ struct registry_priv {
 #ifdef CONFIG_RTW_MESH
 	u8 peer_alive_based_preq;
 #endif
+	u8 monitor_overwrite_seqnum;
 };
 
 /* For registry parameters */

@@ -4498,6 +4498,7 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	if ((frame_ctl & RTW_IEEE80211_FCTL_FTYPE) == RTW_IEEE80211_FTYPE_DATA) {
 
 		pattrib = &pmgntframe->attrib;
+		pattrib->injected = _TRUE;
 		update_monitor_frame_attrib(padapter, pattrib);
 
 		if (is_broadcast_mac_addr(pwlanhdr->addr3) || is_broadcast_mac_addr(pwlanhdr->addr1))
@@ -4506,6 +4507,7 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	} else {
 
 		pattrib = &pmgntframe->attrib;
+		pattrib->injected = _TRUE;
 		update_mgntframe_attrib(padapter, pattrib);
 
 	}

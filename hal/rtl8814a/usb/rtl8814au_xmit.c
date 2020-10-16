@@ -54,6 +54,7 @@ static s32 update_txdesc(struct xmit_frame *pxmitframe, u8 *pmem, s32 sz , u8 ba
 	sint	bmcst = IS_MCAST(pattrib->ra);
 	u16				SWDefineContent = 0x0;
 	u8				DriverFixedRate = 0x0;
+	struct registry_priv	*pregpriv = &(padapter->registrypriv);
 
 #ifndef CONFIG_USE_USB_BUFFER_ALLOC_TX
 	if (padapter->registrypriv.mp_mode == 0) {
@@ -109,15 +110,20 @@ static s32 update_txdesc(struct xmit_frame *pxmitframe, u8 *pmem, s32 sz , u8 ba
 
 	/* offset 12 */
 
-	if (!pattrib->qos_en) {
+	if (pattrib->injected == _TRUE && !pregpriv->monitor_overwrite_seqnum) {
+		/* Prevent sequence number from being overwritten */
+		SET_TX_DESC_HWSEQ_EN_8814A(ptxdesc, 0); /* Hw do not set sequence number */
+		SET_TX_DESC_SEQ_8814A(ptxdesc, pattrib->seqnum); /* Copy inject sequence number to TxDesc */
+	}
+	else if (!pattrib->qos_en) {
 		/* HW sequence, to fix to use 0 queue. todo: 4AC packets to use auto queue select */
 		SET_TX_DESC_HWSEQ_EN_8814A(ptxdesc, 1); /* Hw set sequence number */
 		SET_TX_DESC_EN_HWEXSEQ_8814A(ptxdesc, 0);
 		SET_TX_DESC_DISQSELSEQ_8814A(ptxdesc, 1);
 		SET_TX_DESC_HW_SSN_SEL_8814A(ptxdesc, 0);
-	} else
+	} else {
 		SET_TX_DESC_SEQ_8814A(ptxdesc, pattrib->seqnum);
-
+	}
 	if ((pxmitframe->frame_tag & 0x0f) == DATA_FRAMETAG) {
 		/* RTW_INFO("pxmitframe->frame_tag == DATA_FRAMETAG\n");		 */
 

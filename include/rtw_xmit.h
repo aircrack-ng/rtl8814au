@@ -479,8 +479,9 @@ struct pkt_attrib {
 #ifdef CONFIG_WMMPS_STA
 	u8	trigger_frame;
 #endif /* CONFIG_WMMPS_STA */
-	
+
 	struct sta_info *psta;
+	u8	injected;
 
 	u8 rtsen;
 	u8 cts2self;
