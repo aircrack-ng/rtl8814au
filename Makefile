@@ -92,6 +92,7 @@ CONFIG_IP_R_MONITOR = n #arp VOQ and high rate
 CONFIG_RTW_UP_MAPPING_RULE = tos
 
 ########################## Debug ###########################
+CONFIG_DISABLE_PHYDM_DEBUG_FUNCTION = y
 CONFIG_RTW_DEBUG = n
 # default log level is _DRV_INFO_ = 4,
 # please refer to "How_to_set_driver_debug_log_level.doc" to set the available level.
@@ -1284,6 +1285,10 @@ ifeq ($(CONFIG_RTW_UP_MAPPING_RULE), dscp)
 EXTRA_CFLAGS += -DCONFIG_RTW_UP_MAPPING_RULE=1
 else
 EXTRA_CFLAGS += -DCONFIG_RTW_UP_MAPPING_RULE=0
+endif
+
+ifeq ($(CONFIG_DISABLE_PHYDM_DEBUG_FUNCTION), y)
+EXTRA_CFLAGS += -DCONFIG_DISABLE_PHYDM_DEBUG_FUNCTION
 endif
 
 EXTRA_CFLAGS += -DDM_ODM_SUPPORT_TYPE=0x04
