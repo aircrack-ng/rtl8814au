@@ -164,13 +164,9 @@ module_param(rtw_dynamic_agg_enable, int, 0644);
 * please refer to "How_to_set_driver_debug_log_level.doc" to set the available level.
 */
 #ifdef CONFIG_RTW_DEBUG
-#ifdef RTW_LOG_LEVEL
-	uint rtw_drv_log_level = (uint)RTW_LOG_LEVEL; /* from Makefile */
-#else
-	uint rtw_drv_log_level = _DRV_INFO_;
-#endif
+uint rtw_drv_log_level = _DRV_NONE_;
 module_param(rtw_drv_log_level, uint, 0644);
-MODULE_PARM_DESC(rtw_drv_log_level, "set log level when insert driver module, default log level is _DRV_INFO_ = 4");
+MODULE_PARM_DESC(rtw_drv_log_level, "set log level when insert driver module, default log level is _DRV_NONE_ = 0");
 #endif
 int rtw_radio_enable = 1;
 int rtw_long_retry_lmt = 7;
