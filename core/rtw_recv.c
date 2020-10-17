@@ -4017,8 +4017,15 @@ static sint fill_radiotap_hdr(_adapter *padapter, union recv_frame *precvframe, 
 		hdr_buf[rt_len] |= BIT1; /* MCS index known */
 
 		/* bandwidth */
+#ifdef CONFIG_RTL8814A
+		if(pattrib->physt) {
+			hdr_buf[rt_len] |= BIT0;
+			hdr_buf[rt_len+1] |= (pattrib->phy_info.band_width & 0x03);
+		}
+#else
 		hdr_buf[rt_len] |= BIT0;
 		hdr_buf[rt_len + 1] |= (pattrib->bw & 0x03);
+#endif
 
 		/* guard interval */
 		hdr_buf[rt_len] |= BIT2;
