@@ -4441,22 +4441,7 @@ static void do_queue_select(_adapter	*padapter, struct pkt_attrib *pattrib)
  *	0	success, hardware will handle this xmit frame(packet)
  *	<0	fail
  */
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
-static struct xmit_frame* monitor_alloc_mgtxmitframe(struct xmit_priv *pxmitpriv) {
-	int tries;
-	int delay = 300;
-	struct xmit_frame *pmgntframe = NULL;
-
-	for(tries = 3; tries >= 0; tries--) {
-		pmgntframe = alloc_mgtxmitframe(pxmitpriv);
-		if(pmgntframe != NULL)
-			return pmgntframe;
-		rtw_udelay_os(delay);
-		delay += delay/2;
-	}
-	return NULL;
-}
-
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
 s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 {
 	u16 frame_ctl;
@@ -4468,10 +4453,9 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	struct xmit_frame		*pmgntframe;
 	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
 	struct xmit_priv	*pxmitpriv = &(padapter->xmitpriv);
-	struct registry_priv	*pregpriv = &(padapter->registrypriv);
 	unsigned char	*pframe;
 	u8 dummybuf[32];
-	int len = skb->len, rtap_len, consume;
+	int len = skb->len, rtap_len;
 
 
 	rtw_mstat_update(MSTAT_TYPE_SKB, MSTAT_ALLOC_SUCCESS, skb->truesize);
@@ -4489,20 +4473,12 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	if (unlikely(skb->len < rtap_len))
 		goto fail;
 
-	if ((pmgntframe = monitor_alloc_mgtxmitframe(pxmitpriv)) == NULL) {
-		DBG_COUNTER(padapter->tx_logs.core_tx_err_pxmitframe);
-		return NETDEV_TX_BUSY;
+	if (rtap_len != 12) {
+		RTW_INFO("radiotap len (should be 14): %d\n", rtap_len);
+		goto fail;
 	}
-
-	len -= sizeof(struct ieee80211_radiotap_header);
-	rtap_len -= sizeof(struct ieee80211_radiotap_header);
-
-	while(rtap_len) {
-		consume = rtap_len > sizeof(dummybuf) ? sizeof(dummybuf) : rtap_len;
-		_rtw_pktfile_read(&pktfile, dummybuf, consume);
-		rtap_len -= consume;
-		len -= consume;
-	}
+	_rtw_pktfile_read(&pktfile, dummybuf, rtap_len-sizeof(struct ieee80211_radiotap_header));
+	len = len - rtap_len;
 #endif
 	pmgntframe = alloc_mgtxmitframe(pxmitpriv);
 	if (pmgntframe == NULL) {
@@ -4518,38 +4494,27 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 
 	/* Check DATA/MGNT frames */
 	pwlanhdr = (struct rtw_ieee80211_hdr *)pframe;
-	pattrib = &pmgntframe->attrib;
+	frame_ctl = le16_to_cpu(pwlanhdr->frame_ctl);
+	if ((frame_ctl & RTW_IEEE80211_FCTL_FTYPE) == RTW_IEEE80211_FTYPE_DATA) {
 
-	if (pregpriv->monitor_disable_1m) {
-		frame_ctl = le16_to_cpu(pwlanhdr->frame_ctl);
-		if ((frame_ctl & RTW_IEEE80211_FCTL_FTYPE) == RTW_IEEE80211_FTYPE_DATA) {
+		pattrib = &pmgntframe->attrib;
+		pattrib->injected = _TRUE;
+		update_monitor_frame_attrib(padapter, pattrib);
 
-			update_monitor_frame_attrib(padapter, pattrib);
-
-			if (is_broadcast_mac_addr(pwlanhdr->addr3) || is_broadcast_mac_addr(pwlanhdr->addr1))
-				pattrib->rate = MGN_24M;
-		} else {
-			update_mgntframe_attrib(padapter, pattrib);
-		}
-
-	pattrib->injected = _TRUE;
+		if (is_broadcast_mac_addr(pwlanhdr->addr3) || is_broadcast_mac_addr(pwlanhdr->addr1))
+			pattrib->rate = MGN_24M;
 
 	} else {
+
+		pattrib = &pmgntframe->attrib;
 		pattrib->injected = _TRUE;
 		update_mgntframe_attrib(padapter, pattrib);
 
-
-		pattrib->rate = MGN_1M;
-
-		pattrib->ldpc = _FALSE;
-		pattrib->stbc = 0;
 	}
-
-	if (pregpriv->monitor_retransmit)
-		pattrib->retry_ctrl = _TRUE;
-	else
-		pattrib->retry_ctrl = _FALSE;
-
+	//if (pregpriv->monitor_retransmit)
+	//	pattrib->retry_ctrl = _TRUE;
+	//else
+	pattrib->retry_ctrl = _FALSE;
 	pattrib->pktlen = len;
 	pmlmeext->mgnt_seq = GetSequence(pwlanhdr);
 	pattrib->seqnum = pmlmeext->mgnt_seq;
@@ -4557,11 +4522,10 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	pattrib->last_txcmdsz = pattrib->pktlen;
 
 	dump_mgntframe(padapter, pmgntframe);
-	DBG_COUNTER(padapter->tx_logs.core_tx);
 
 fail:
 	rtw_skb_free(skb);
-	return NETDEV_TX_OK;
+	return 0;
 }
 #endif
 

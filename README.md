@@ -1,42 +1,21 @@
 # rtl8814au
-Drivers for the rtl8814au chipset for wireless adapters
-
-# iperf3 results
-```sh
-Connecting to host **.***.**.**, port 5201
-[  5] local 10.0.0.101 port 55110 connected to **.***.**.** port 5201
-[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
-[  5]   0.00-1.00   sec  1.82 MBytes  15.2 Mbits/sec   23   89.1 KBytes       
-[  5]   1.00-2.00   sec  2.49 MBytes  20.9 Mbits/sec    0    102 KBytes       
-[  5]   2.00-3.00   sec  2.49 MBytes  20.9 Mbits/sec    0    120 KBytes       
-[  5]   3.00-4.00   sec  3.11 MBytes  26.1 Mbits/sec    0    139 KBytes       
-[  5]   4.00-5.00   sec  3.73 MBytes  31.3 Mbits/sec    0    157 KBytes       
-[  5]   5.00-6.00   sec  4.04 MBytes  33.9 Mbits/sec    0    175 KBytes       
-[  5]   6.00-7.00   sec  4.16 MBytes  34.9 Mbits/sec    0    194 KBytes       
-[  5]   7.00-8.00   sec  4.78 MBytes  40.1 Mbits/sec    0    211 KBytes       
-[  5]   8.00-9.00   sec  4.85 MBytes  40.7 Mbits/sec    0    228 KBytes       
-[  5]   9.00-10.00  sec  5.97 MBytes  50.0 Mbits/sec    0    246 KBytes       
-- - - - - - - - - - - - - - - - - - - - - - - - -
-[ ID] Interval           Transfer     Bitrate         Retr
-[  5]   0.00-10.00  sec  37.4 MBytes  31.4 Mbits/sec   23             sender
-[  5]   0.00-10.04  sec  36.5 MBytes  30.5 Mbits/sec                  receiver
-```
+Drivers for the rtl8814au chipset for wireless adapters (D-Link DWA-192 rev A1)
 
 # build & install
-```sh
-$ git clone -b v5.8.5.1 https://github.com/aircrack-ng/rtl8814au.git
-$ cd rtl8814au
-$ make
-$ sudo make install
+```
+git clone https://github.com/aircrack-ng/rtl8814au.git
+cd driver
+make
+sudo make install
 ```
 
 # debian dkms package (require dpkg-dev, dkms, dh-modaliases)
-```sh
+```
 sudo apt install  debhelper dpkg-dev dkms dh-modaliases
 cd driver
 dpkg-buildpackage -b --no-sign
 cd ..
-dpkg -i *.deb
+dpkg -i rtl8814au-dkms_4.3.21.1-24835.20190115_all.deb
 ```
 
 

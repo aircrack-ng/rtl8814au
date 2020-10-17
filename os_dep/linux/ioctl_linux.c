@@ -2452,19 +2452,24 @@ static int rtw_wx_get_essid(struct net_device *dev,
 	struct	mlme_priv	*pmlmepriv = &(padapter->mlmepriv);
 	WLAN_BSSID_EX  *pcur_bss = &pmlmepriv->cur_network.network;
 
+
+
 	if ((check_fwstate(pmlmepriv, _FW_LINKED) == _TRUE) ||
 	    (check_fwstate(pmlmepriv, WIFI_ADHOC_MASTER_STATE) == _TRUE)) {
 		len = pcur_bss->Ssid.SsidLength;
 
+		wrqu->essid.length = len;
+
 		_rtw_memcpy(extra, pcur_bss->Ssid.Ssid, len);
 
+		wrqu->essid.flags = 1;
 	} else {
-		len = 0;
-		*extra = 0;
+		ret = -1;
+		goto exit;
 	}
 
-	wrqu->essid.length = len;
-	wrqu->essid.flags = 1;
+exit:
+
 
 	return ret;
 
@@ -12379,9 +12384,8 @@ static struct iw_statistics *rtw_get_wireless_stats(struct net_device *dev)
 }
 #endif
 
-#if defined(CONFIG_WIRELESS_EXT) && !defined(CONFIG_CFG80211_WEXT)
-struct iw_handler_def rtw_handlers_def =
-{
+#ifdef CONFIG_WIRELESS_EXT
+struct iw_handler_def rtw_handlers_def = {
 	.standard = rtw_handlers,
 	.num_standard = sizeof(rtw_handlers) / sizeof(iw_handler),
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)) || defined(CONFIG_WEXT_PRIV)

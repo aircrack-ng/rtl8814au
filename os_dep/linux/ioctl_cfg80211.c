@@ -27,13 +27,6 @@
 #define DBG_RTW_CFG80211_MESH_CONF 0
 #endif
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 7, 0))
-#define ieee80211_band nl80211_band
-#define IEEE80211_BAND_2GHZ NL80211_BAND_2GHZ
-#define IEEE80211_BAND_5GHZ NL80211_BAND_5GHZ
-#define IEEE80211_NUM_BANDS NUM_NL80211_BANDS
-#endif
-
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0))
 #define STATION_INFO_INACTIVE_TIME	BIT(NL80211_STA_INFO_INACTIVE_TIME)
 #define STATION_INFO_LLID			BIT(NL80211_STA_INFO_LLID)
@@ -41,27 +34,13 @@
 #define STATION_INFO_PLINK_STATE	BIT(NL80211_STA_INFO_PLINK_STATE)
 #define STATION_INFO_SIGNAL			BIT(NL80211_STA_INFO_SIGNAL)
 #define STATION_INFO_TX_BITRATE		BIT(NL80211_STA_INFO_TX_BITRATE)
-#define STATION_INFO_TX_BITRATE_BW_5	BIT(RATE_INFO_BW_5)
-#define STATION_INFO_TX_BITRATE_BW_10	BIT(RATE_INFO_BW_10)
-#define STATION_INFO_TX_BITRATE_BW_20	BIT(RATE_INFO_BW_20)
-#define STATION_INFO_TX_BITRATE_BW_40	BIT(RATE_INFO_BW_40)
-#define STATION_INFO_TX_BITRATE_BW_80	BIT(RATE_INFO_BW_80)
-#define STATION_INFO_TX_BITRATE_BW_160	BIT(RATE_INFO_BW_160)
 #define STATION_INFO_RX_PACKETS		BIT(NL80211_STA_INFO_RX_PACKETS)
 #define STATION_INFO_TX_PACKETS		BIT(NL80211_STA_INFO_TX_PACKETS)
 #define STATION_INFO_TX_FAILED		BIT(NL80211_STA_INFO_TX_FAILED)
 #define STATION_INFO_LOCAL_PM		BIT(NL80211_STA_INFO_LOCAL_PM)
 #define STATION_INFO_PEER_PM		BIT(NL80211_STA_INFO_PEER_PM)
 #define STATION_INFO_NONPEER_PM		BIT(NL80211_STA_INFO_NONPEER_PM)
-#define STATION_INFO_RX_BYTES		BIT(NL80211_STA_INFO_RX_BYTES)
-#define STATION_INFO_TX_BYTES		BIT(NL80211_STA_INFO_TX_BYTES)
 #define STATION_INFO_ASSOC_REQ_IES	0
-#define STATION_INFO_BSS_PARAM			BIT(NL80211_STA_INFO_BSS_PARAM)
-#define STATION_INFO_BSS_PARAM_CTS_PROT		BIT(NL80211_STA_BSS_PARAM_CTS_PROT)
-#define STATION_INFO_BSS_PARAM_SHORT_PREAMBLE	BIT(NL80211_STA_BSS_PARAM_SHORT_PREAMBLE)
-#define STATION_INFO_BSS_PARAM_SHORT_SLOT_TIME	BIT(NL80211_STA_BSS_PARAM_SHORT_SLOT_TIME)
-#define STATION_INFO_BSS_PARAM_DTIM_PERIOD	BIT(NL80211_STA_BSS_PARAM_DTIM_PERIOD)
-#define STATION_INFO_BSS_PARAM_BEACON_INTERVAL	BIT(NL80211_STA_BSS_PARAM_BEACON_INTERVAL)
 #endif /* Linux kernel >= 4.0.0 */
 
 #include <rtw_wifi_regd.h>
@@ -240,7 +219,7 @@ static u8 rtw_chbw_to_cfg80211_chan_def(struct wiphy *wiphy, struct cfg80211_cha
 	if (!chan)
 		goto exit;
 
-	if (bw == CHANNEL_WIDTH_20)
+	if (bw == CHANNEL_WIDTH_20) 
 		chdef->width = ht ? NL80211_CHAN_WIDTH_20 : NL80211_CHAN_WIDTH_20_NOHT;
 	else if (bw == CHANNEL_WIDTH_40)
 		chdef->width = NL80211_CHAN_WIDTH_40;
@@ -301,7 +280,7 @@ static void rtw_get_chbw_from_cfg80211_chan_def(struct cfg80211_chan_def *chdef,
 		rtw_warn_on(1);
 		*ch = 0;
 		return;
-	}
+	}		
 
 	switch (chdef->width) {
 	case NL80211_CHAN_WIDTH_20_NOHT:
@@ -1104,16 +1083,12 @@ check_bss:
 		struct ieee80211_channel *notify_channel;
 		u32 freq;
 		u16 channel = cur_network->network.Configuration.DSConfig;
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 12, 0))
-		struct cfg80211_roam_info roam_info;
-#endif
 
 		freq = rtw_ch2freq(channel);
 		notify_channel = ieee80211_get_channel(wiphy, freq);
 		#endif
 
 		#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 12, 0)
-		roam_info.channel = notify_channel;
 		roam_info.bssid = cur_network->network.MacAddress;
 		roam_info.req_ie = pmlmepriv->assoc_req + sizeof(struct rtw_ieee80211_hdr_3addr) + 2;
 		roam_info.req_ie_len = pmlmepriv->assoc_req_len - sizeof(struct rtw_ieee80211_hdr_3addr) - 2;
@@ -1123,9 +1098,9 @@ check_bss:
 		cfg80211_roamed(padapter->pnetdev, &roam_info, GFP_ATOMIC);
 		#else
 		cfg80211_roamed(padapter->pnetdev
-		#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 39) || defined(COMPAT_KERNEL_RELEASE)
+			#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 39) || defined(COMPAT_KERNEL_RELEASE)
 			, notify_channel
-		#endif
+			#endif
 			, cur_network->network.MacAddress
 			, pmlmepriv->assoc_req + sizeof(struct rtw_ieee80211_hdr_3addr) + 2
 			, pmlmepriv->assoc_req_len - sizeof(struct rtw_ieee80211_hdr_3addr) - 2
@@ -1136,10 +1111,10 @@ check_bss:
 
 		RTW_INFO(FUNC_ADPT_FMT" call cfg80211_roamed\n", FUNC_ADPT_ARG(padapter));
 
-		#ifdef CONFIG_RTW_80211R
+#ifdef CONFIG_RTW_80211R
 		if (rtw_ft_roam(padapter))
 			rtw_ft_set_status(padapter, RTW_FT_ASSOCIATED_STA);
-		#endif
+#endif
 	} else {
 		#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 11, 0) || defined(COMPAT_KERNEL_RELEASE)
 		RTW_INFO("pwdev->sme_state(b)=%d\n", pwdev->sme_state);
@@ -1152,9 +1127,9 @@ check_bss:
 				, pmlmepriv->assoc_rsp + sizeof(struct rtw_ieee80211_hdr_3addr) + 6
 				, pmlmepriv->assoc_rsp_len - sizeof(struct rtw_ieee80211_hdr_3addr) - 6
 				, WLAN_STATUS_SUCCESS, GFP_ATOMIC);
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 11, 0) || defined(COMPAT_KERNEL_RELEASE)
+		#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 11, 0) || defined(COMPAT_KERNEL_RELEASE)
 		RTW_INFO("pwdev->sme_state(a)=%d\n", pwdev->sme_state);
-#endif
+		#endif
 	}
 
 	rtw_wdev_free_connect_req(pwdev_priv);
@@ -1228,11 +1203,8 @@ void rtw_cfg80211_indicate_disconnect(_adapter *padapter, u16 reason, u8 locally
 				reason?reason:WLAN_STATUS_UNSPECIFIED_FAILURE,
 				GFP_ATOMIC);
 		} else {
-				RTW_INFO(FUNC_ADPT_FMT" call cfg80211_disconnected\n", FUNC_ADPT_ARG(padapter));
-				rtw_cfg80211_disconnected(pwdev, reason, NULL, 0, locally_generated, GFP_ATOMIC);
-
-				cfg80211_connect_result(padapter->pnetdev, NULL, NULL, 0, NULL, 0,
-						WLAN_STATUS_UNSPECIFIED_FAILURE, GFP_ATOMIC);
+			RTW_INFO(FUNC_ADPT_FMT" call cfg80211_disconnected, reason:%d\n", FUNC_ADPT_ARG(padapter), reason);
+			rtw_cfg80211_disconnected(pwdev, reason, NULL, 0, locally_generated, GFP_ATOMIC);
 		}
 		#endif
 	}
@@ -2258,7 +2230,6 @@ static int cfg80211_rtw_get_station(struct wiphy *wiphy,
 		&& check_fwstate(pmlmepriv, _FW_LINKED)
 	) {
 		struct wlan_network  *cur_network = &(pmlmepriv->cur_network);
-		struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(padapter);
 
 		if (_rtw_memcmp((u8 *)mac, cur_network->network.MacAddress, ETH_ALEN) == _FALSE) {
 			RTW_INFO("%s, mismatch bssid="MAC_FMT"\n", __func__, MAC_ARG(cur_network->network.MacAddress));
@@ -2282,97 +2253,12 @@ static int cfg80211_rtw_get_station(struct wiphy *wiphy,
 		}
 		sinfo->filled |= STATION_INFO_INACTIVE_TIME;
 		sinfo->inactive_time = rtw_get_passing_time_ms(psta->sta_stats.last_rx_time);
-
-		/* to-do set the txrate flags */
-		// for example something like:
-		//sinfo->txrate.flags |= NL80211_RATE_INFO_VHT_NSS;
-		//sinfo->txrate.nss = rtw_vht_mcsmap_to_nss(psta->vhtpriv.vht_mcs_map);
-
-
-		/* bw_mode is more delicate
-		   sinfo->txrate.bw is flagged
-		   psta->bw_mode */
-
-		/*
-		sinfo->txrate.bw = psta->bw_mode;
-		sinfo->txrate.flags |= psta->bw_mode;
-		printk("rtw_get_current_tx_sgi: %i", rtw_get_current_tx_sgi(padapter, mac));
-		printk("NSS: %i", rtw_vht_mcsmap_to_nss(psta->vhtpriv.vht_mcs_map));
-		printk("BW MODE: %i", psta->bw_mode);
-		printk("5 10 20 40 80 160: %i %i %i %i %i %i", STATION_INFO_TX_BITRATE_BW_5, STATION_INFO_TX_BITRATE_BW_10, STATION_INFO_TX_BITRATE_BW_20, STATION_INFO_TX_BITRATE_BW_40, STATION_INFO_TX_BITRATE_BW_80, STATION_INFO_TX_BITRATE_BW_160);
-		printk("5 10 20 40 80 160: %i %i %i %i %i %i", RATE_INFO_BW_5, RATE_INFO_BW_10, RATE_INFO_BW_20, RATE_INFO_BW_40, RATE_INFO_BW_80, RATE_INFO_BW_160);
-		*/
-
-		sinfo->filled |= STATION_INFO_RX_BYTES;
-		sinfo->rx_bytes = psta->sta_stats.rx_bytes;
-
-		sinfo->filled |= STATION_INFO_TX_BYTES;
-		sinfo->tx_bytes = psta->sta_stats.tx_bytes;
-
 		sinfo->filled |= STATION_INFO_RX_PACKETS;
 		sinfo->rx_packets = sta_rx_data_pkts(psta);
 		sinfo->filled |= STATION_INFO_TX_PACKETS;
 		sinfo->tx_packets = psta->sta_stats.tx_pkts;
 		sinfo->filled |= STATION_INFO_TX_FAILED;
 		sinfo->tx_failed = psta->sta_stats.tx_fail_cnt;
-
-
-		sinfo->filled |= STATION_INFO_BSS_PARAM;
-
-#if defined (LINUX_VERSION_CODE) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 20, 0))
-		if (!psta->no_short_preamble_set)
-		  sinfo->bss_param.flags |= STATION_INFO_BSS_PARAM_SHORT_PREAMBLE;
-
-		if (!psta->no_short_slot_time_set)
-		  sinfo->bss_param.flags |= STATION_INFO_BSS_PARAM_SHORT_SLOT_TIME;
-
-		/* no idea how to check this yet */
-		if (0)
-		  sinfo->bss_param.flags |= STATION_INFO_BSS_PARAM_CTS_PROT;
-
-		/* is this actually the dtim_period? */
-		sinfo->bss_param.flags |= STATION_INFO_BSS_PARAM_DTIM_PERIOD;
-		//sinfo->bss_param.dtim_period = pwrctl->vif.bss_conf.dtim_period;
-
-		// kimocoder: this one below needs attention
-		//sinfo->bss_param.beacon_interval = get_beacon_interval(&cur_network->network);
-
-		/*
-		sinfo->sta_flags.mask = BIT(NL80211_STA_FLAG_AUTHORIZED) |
-					BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) |
-					BIT(NL80211_STA_FLAG_WME) |
-					BIT(NL80211_STA_FLAG_MFP) |
-					BIT(NL80211_STA_FLAG_AUTHENTICATED) |
-					BIT(NL80211_STA_FLAG_ASSOCIATED) |
-					BIT(NL80211_STA_FLAG_TDLS_PEER);
-		if (test_sta_flag(sta, WLAN_STA_AUTHORIZED))
-			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_AUTHORIZED);
-		if (test_sta_flag(sta, WLAN_STA_SHORT_PREAMBLE))
-			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_SHORT_PREAMBLE);
-		if (sta->sta.wme)
-			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_WME);
-		if (test_sta_flag(sta, WLAN_STA_MFP))
-			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_MFP);
-		if (test_sta_flag(sta, WLAN_STA_AUTH))
-			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_AUTHENTICATED);
-		if (test_sta_flag(sta, WLAN_STA_ASSOC))
-			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_ASSOCIATED);
-		if (test_sta_flag(sta, WLAN_STA_TDLS_PEER))
-			sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
-		*/
-
-		/* check if the driver has a SW RC implementation */
-		//if (ref && ref->ops->get_expected_throughput)
-		//	thr = ref->ops->get_expected_throughput(sta->rate_ctrl_priv);
-		//else
-		//	thr = drv_get_expected_throughput(local, &sta->sta);
-
-		//if (thr != 0) {
-		//	sinfo->filled |= BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
-		//	sinfo->expected_throughput = thr;
-
-
-#endif
 	}
 
 #ifdef CONFIG_RTW_MESH
@@ -2644,17 +2530,10 @@ void rtw_cfg80211_unlink_bss(_adapter *padapter, struct wlan_network *pnetwork)
 		select_network.InfrastructureMode == Ndis802_11Infrastructure?WLAN_CAPABILITY_ESS:WLAN_CAPABILITY_IBSS);
 #endif
 
-	if (!wiphy) {
-		pr_info("rtl8814au: rtw_cfg80211_unlink_bss: wiphy is NULL\n");
-		return;
-	}
-
 	if (bss) {
 		cfg80211_unlink_bss(wiphy, bss);
 		RTW_INFO("%s(): cfg80211_unlink %s!!\n", __func__, select_network.Ssid.Ssid);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0)
-		if (!padapter->rtw_wdev->wiphy)
-			return;
 		cfg80211_put_bss(padapter->rtw_wdev->wiphy, bss);
 #else
 		cfg80211_put_bss(bss);
@@ -4253,7 +4132,7 @@ static int cfg80211_rtw_get_txpower(struct wiphy *wiphy,
 {
 	RTW_INFO("%s\n", __func__);
 
-	*dbm = (20);
+	*dbm = (12);
 
 	return 0;
 }
@@ -4425,7 +4304,6 @@ void rtw_cfg80211_indicate_sta_assoc(_adapter *padapter, u8 *pmgmt_frame, uint f
 		sinfo.filled = STATION_INFO_ASSOC_REQ_IES;
 		sinfo.assoc_req_ies = pmgmt_frame + WLAN_HDR_A3_LEN + ie_offset;
 		sinfo.assoc_req_ies_len = frame_len - WLAN_HDR_A3_LEN - ie_offset;
-		cfg80211_sinfo_alloc_tid_stats(&sinfo, GFP_KERNEL);
 		cfg80211_new_sta(ndev, get_addr2_ptr(pmgmt_frame), &sinfo, GFP_ATOMIC);
 	}
 #else /* defined(RTW_USE_CFG80211_STA_EVENT) */
@@ -4565,6 +4443,11 @@ static int rtw_cfg80211_monitor_if_xmit_entry(struct sk_buff *skb, struct net_de
 	rtap_len = ieee80211_get_radiotap_len(skb->data);
 	if (unlikely(skb->len < rtap_len))
 		goto fail;
+
+	if (rtap_len != 14) {
+		RTW_INFO("radiotap len (should be 14): %d\n", rtap_len);
+		goto fail;
+	}
 
 	/* Skip the ratio tap header */
 	skb_pull(skb, rtap_len);
@@ -4915,11 +4798,7 @@ static int cfg80211_rtw_del_virtual_intf(struct wiphy *wiphy,
 		pwdev_priv = adapter_wdev_data(adapter);
 
 		if (ndev == pwdev_priv->pmon_ndev) {
-	/* unregister only monitor device
-	 * because only monitor can be added
-	 */
-	if(wdev->iftype == NL80211_IFTYPE_MONITOR)
-		unregister_netdevice(ndev);
+			unregister_netdevice(ndev);
 			pwdev_priv->pmon_ndev = NULL;
 			pwdev_priv->ifname_mon[0] = '\0';
 			RTW_INFO(FUNC_NDEV_FMT" remove monitor ndev\n", FUNC_NDEV_ARG(ndev));
@@ -5116,18 +4995,6 @@ static int cfg80211_rtw_start_ap(struct wiphy *wiphy, struct net_device *ndev,
 	ret = rtw_add_beacon(adapter, settings->beacon.head, settings->beacon.head_len,
 		settings->beacon.tail, settings->beacon.tail_len);
 
-        // In cases like WPS, the proberesp and assocresp IEs vary from the beacon, and need to be explicitly set
-        if(ret == 0) {
-                if(settings->beacon.proberesp_ies && settings->beacon.proberesp_ies_len > 0) {
-                        rtw_cfg80211_set_mgnt_wpsp2pie(ndev, (char *)settings->beacon.proberesp_ies,
-                                settings->beacon.proberesp_ies_len, 0x2/*PROBE_RESP*/);
-                }
-                if(settings->beacon.assocresp_ies && settings->beacon.assocresp_ies_len < 0) {
-                        rtw_cfg80211_set_mgnt_wpsp2pie(ndev, (char *)settings->beacon.assocresp_ies,
-                                settings->beacon.assocresp_ies_len, 0x4/*ASSOC_RESP*/);
-                }
-        }
-
 	adapter->mlmeextpriv.mlmext_info.hidden_ssid_mode = settings->hidden_ssid;
 
 	if (settings->ssid && settings->ssid_len) {
@@ -5163,18 +5030,6 @@ static int cfg80211_rtw_change_beacon(struct wiphy *wiphy, struct net_device *nd
 	RTW_INFO(FUNC_NDEV_FMT"\n", FUNC_NDEV_ARG(ndev));
 
 	ret = rtw_add_beacon(adapter, info->head, info->head_len, info->tail, info->tail_len);
-
-        // In cases like WPS, the proberesp and assocresp IEs vary from the beacon, and need to be explicitly set
-        if(ret == 0) {
-                if(info->proberesp_ies && info->proberesp_ies_len > 0) {
-                        rtw_cfg80211_set_mgnt_wpsp2pie(ndev, (char *)info->proberesp_ies,
-                                info->proberesp_ies_len, 0x2/*PROBE_RESP*/);
-                }
-                if(info->assocresp_ies && info->assocresp_ies_len > 0) {
-                        rtw_cfg80211_set_mgnt_wpsp2pie(ndev, (char *)info->assocresp_ies,
-                                info->assocresp_ies_len, 0x4/*ASSOC_RESP*/);
-                }
-        }
 
 	return ret;
 }
@@ -5881,7 +5736,7 @@ static int	cfg80211_rtw_dump_station(struct wiphy *wiphy, struct net_device *nde
 	else
 		_rtw_memcpy(mac, plink->addr, ETH_ALEN);
 	#endif
-
+	
 	sinfo->filled = 0;
 
 	if (psta) {
@@ -6007,116 +5862,6 @@ static int	cfg80211_rtw_set_txq_params(struct wiphy *wiphy
 }
 #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)) */
 
-static int cfg80211_rtw_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev, struct cfg80211_chan_def *chandef){
-  _adapter *padapter= wiphy_to_adapter(wiphy);
-  int channel;
-  int control_freq;
-  int center_freq;
-  int center_freq2=0;
-  int width;
-  int band;
-  int bandWidth;
-  int offset;
-
-  struct dvobj_priv *dvobj;
-  struct net_device *ndev = wdev->netdev;
-  HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
-  if (!ndev)
-    return -ENODEV;
-
-  offset = rtw_get_oper_choffset(padapter);
-  channel = adapter_to_dvobj(padapter)->oper_channel;
-  if (channel >= 1) {
-    switch (pHalData->current_band_type) {
-      case 0:
-	band = NL80211_BAND_2GHZ;
-	break;
-      case 1:
-	band = NL80211_BAND_5GHZ;
-	break;
-      default:
-	return -EINVAL;
-
-    }
-    control_freq =  ieee80211_channel_to_frequency(channel, band);
-
-    dvobj=adapter_to_dvobj(padapter);
-    if (dvobj!=NULL) {
-      bandWidth = adapter_to_dvobj(padapter)->oper_bwmode;
-      //DBG_871X("%s bw %d\n", __func__,adapter_to_dvobj(padapter)->oper_bwmode);
-    } else {
-      bandWidth = pHalData->current_channel;
-      //DBG_871X("%s dvobj null\n", __func__);
-    }
-    switch(pHalData->current_channel){
-      case CHANNEL_WIDTH_20:
-	//DBG_871X("%s width 20\n", __func__);
-	width = NL80211_CHAN_WIDTH_20;
-	center_freq = control_freq;
-	break;
-      case CHANNEL_WIDTH_40:
-	//DBG_871X("%s width 40\n", __func__);
-	width = NL80211_CHAN_WIDTH_40;
-	if (offset==HAL_PRIME_CHNL_OFFSET_LOWER) {
-	  center_freq = control_freq +10;
-	} else {
-	  center_freq = control_freq -10;
-	}
-	break;
-      case CHANNEL_WIDTH_80:
-	//DBG_871X("%s width 80\n", __func__);
-	width = NL80211_CHAN_WIDTH_80;
-	if (offset==HAL_PRIME_CHNL_OFFSET_LOWER) {
-	  center_freq = control_freq +30;
-	} else {
-	  center_freq = control_freq -30;
-	}
-	break;
-      case CHANNEL_WIDTH_160:
-	//DBG_871X("%s width 160\n", __func__);
-	width = NL80211_CHAN_WIDTH_160;
-	if (offset==HAL_PRIME_CHNL_OFFSET_LOWER) {
-	  center_freq = control_freq +50;
-	} else {
-	  center_freq = control_freq -50;
-	}
-	break;
-      case CHANNEL_WIDTH_80_80:
-	//DBG_871X("%s width 80x80\n", __func__);
-	width = NL80211_CHAN_WIDTH_80P80;
-	if (offset==HAL_PRIME_CHNL_OFFSET_LOWER) {
-	  center_freq = control_freq +30;
-	  center_freq2=center_freq+80;
-	} else {
-	  center_freq = control_freq -30;
-	  center_freq2=center_freq-80;
-	}
-	break;
-      case CHANNEL_WIDTH_MAX:
-	//DBG_871X("%s width max\n", __func__);
-	width = NL80211_CHAN_WIDTH_160;
-	break;
-    }
-    chandef->chan = ieee80211_get_channel(wiphy, control_freq);
-    if (chandef->chan == NULL) {
-      chandef->chan = ieee80211_get_channel(wiphy, ieee80211_channel_to_frequency(channel, band));
-      //DBG_871X("%s chan null\n", __func__);
-      if (chandef->chan == NULL) {
-	//DBG_871X("%s chan null\n", __func__);
-	return -EINVAL;
-      }
-    }
-    chandef->width = width;
-    chandef->center_freq1 = center_freq;
-    chandef->center_freq2 = center_freq2;
-    //DBG_871X("%s : channel %d width %d freq1 %d freq2 %d center_freq %d offset %d\n", __func__, channel, width, chandef->center_freq1, chandef->center_freq2, chandef->chan->center_freq,rtw_get_oper_choffset(padapter));
-  } else {
-      return -EINVAL;
-  }
-  return 0;
-
-}
-
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0))
 static int	cfg80211_rtw_set_channel(struct wiphy *wiphy
 	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
@@ -6160,11 +5905,7 @@ static int	cfg80211_rtw_set_channel(struct wiphy *wiphy
 	//RTW_INFO(FUNC_ADPT_FMT" ch:%d bw:%d, offset:%d\n"
 	//	, FUNC_ADPT_ARG(padapter), chan_target, chan_width, chan_offset);
 
-	//padapter->mlmeextpriv.cur_channel = target_channel;
-	//rtw_ps_deny(padapter, PS_DENY_IOCTL);
-	//LeaveAllPowerSaveModeDirect(padapter); /* leave PS mode for guaranteeing to access hw register successfully */
 	rtw_set_chbw_cmd(padapter, chan_target, chan_width, chan_offset, RTW_CMDF_WAIT_ACK);
-	//rtw_ps_deny_cancel(padapter, PS_DENY_IOCTL);
 
 	return 0;
 }
@@ -6264,10 +6005,7 @@ static int cfg80211_rtw_set_monitor_channel(struct wiphy *wiphy
 	RTW_INFO(FUNC_ADPT_FMT" ch:%d bw:%d, offset:%d\n"
 		, FUNC_ADPT_ARG(padapter), target_channal, target_width, target_offset);
 
-	//padapter->mlmeextpriv.cur_channel = target_channel;
-	//rtw_ps_deny(padapter, PS_DENY_IOCTL);
 	rtw_set_chbw_cmd(padapter, target_channal, target_width, target_offset, RTW_CMDF_WAIT_ACK);
-	//rtw_ps_deny_cancel(padapter, PS_DENY_IOCTL);
 
 	return 0;
 }
@@ -9462,13 +9200,7 @@ static void rtw_cfg80211_init_ht_capab(_adapter *padapter
 
 	ht_cap->ht_supported = 1;
 
-	/* According to the comment in rtw_ap.c:
-	 * "Note: currently we switch to the MIXED op mode if HT non-greenfield
-	 * station is associated. Probably it's a theoretical case, since
-	 * it looks like all known HT STAs support greenfield."
-	 * Therefore Greenfield is added to ht_cap
-	 */
-	ht_cap->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 | IEEE80211_HT_CAP_GRN_FLD |
+	ht_cap->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
 				IEEE80211_HT_CAP_SGI_40 | IEEE80211_HT_CAP_SGI_20 |
 				IEEE80211_HT_CAP_DSSSCCK40 | IEEE80211_HT_CAP_MAX_AMSDU;
 	rtw_cfg80211_init_ht_capab_ex(padapter, ht_cap, band, rf_type);
@@ -9717,12 +9449,9 @@ static void rtw_cfg80211_preinit_wiphy(_adapter *adapter, struct wiphy *wiphy)
 	/* wiphy->flags |= WIPHY_FLAG_OFFCHAN_TX | WIPHY_FLAG_HAVE_AP_SME; */
 #endif
 
-#if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 0, 0))
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 12, 0))
- 	wiphy->max_sched_scan_reqs = 1;
-#else
-  	wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
-#endif
+#if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 0, 0) && \
+			   LINUX_VERSION_CODE < KERNEL_VERSION(4, 12, 0))
+	wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
 #ifdef CONFIG_PNO_SUPPORT
 	wiphy->max_sched_scan_ssids = MAX_PNO_LIST_COUNT;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
@@ -10153,7 +9882,6 @@ static struct cfg80211_ops rtw_cfg80211_ops = {
 	.suspend = cfg80211_rtw_suspend,
 	.resume = cfg80211_rtw_resume,
 #endif /* CONFIG_PNO_SUPPORT */
-	.get_channel = cfg80211_rtw_get_channel,
 #ifdef CONFIG_RFKILL_POLL
 	.rfkill_poll = cfg80211_rtw_rfkill_poll,
 #endif

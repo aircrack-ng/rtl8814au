@@ -262,7 +262,7 @@ get_delta_swing_table_8814a_path_cd(
 	return;
 }
 
-/*
+
 void configure_txpower_track_8814a(
 	struct txpwrtrack_cfg	*config
 )
@@ -280,7 +280,7 @@ void configure_txpower_track_8814a(
 	config->get_delta_swing_table = get_delta_swing_table_8814a;
 	config->get_delta_swing_table8814only = get_delta_swing_table_8814a_path_cd;
 }
-*/
+
 
 
 /* 1 7.	IQK */

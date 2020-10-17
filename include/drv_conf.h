@@ -14,8 +14,7 @@
  *****************************************************************************/
 #ifndef __DRV_CONF_H__
 #define __DRV_CONF_H__
-#include <generated/autoconf.h>
-#include "rtl_autoconf.h"
+#include "autoconf.h"
 #include "hal_ic_cfg.h"
 
 #define CONFIG_RSSI_PRIORITY

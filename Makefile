@@ -65,7 +65,6 @@ CONFIG_EFUSE_CONFIG_FILE = y
 CONFIG_EXT_CLK = n
 CONFIG_TRAFFIC_PROTECT = n
 CONFIG_LOAD_PHY_PARA_FROM_FILE = y
-CONFIG_DISABLE_REGD_C = n
 CONFIG_TXPWR_BY_RATE = y
 CONFIG_TXPWR_BY_RATE_EN = n
 CONFIG_TXPWR_LIMIT = y
@@ -93,7 +92,6 @@ CONFIG_IP_R_MONITOR = n #arp VOQ and high rate
 CONFIG_RTW_UP_MAPPING_RULE = tos
 
 ########################## Debug ###########################
-CONFIG_DISABLE_PHYDM_DEBUG_FUNCTION = y
 CONFIG_RTW_DEBUG = n
 # default log level is _DRV_INFO_ = 4,
 # please refer to "How_to_set_driver_debug_log_level.doc" to set the available level.
@@ -119,7 +117,7 @@ CONFIG_HIGH_ACTIVE_HST2DEV = n
 CONFIG_PNO_SUPPORT = n
 CONFIG_PNO_SET_DEBUG = n
 CONFIG_AP_WOWLAN = n
-######### Notify SDIO Host Keep Power During Suspend ##########
+######### Notify SDIO Host Keep Power During Syspend ##########
 CONFIG_RTW_SDIO_PM_KEEP_POWER = y
 ###################### MP HW TX MODE FOR VHT #######################
 CONFIG_MP_VHT_HW_TX_MODE = n
@@ -1288,10 +1286,6 @@ else
 EXTRA_CFLAGS += -DCONFIG_RTW_UP_MAPPING_RULE=0
 endif
 
-ifeq ($(CONFIG_DISABLE_PHYDM_DEBUG_FUNCTION), y)
-EXTRA_CFLAGS += -DCONFIG_DISABLE_PHYDM_DEBUG_FUNCTION
-endif
-
 EXTRA_CFLAGS += -DDM_ODM_SUPPORT_TYPE=0x04
 
 ifeq ($(CONFIG_PLATFORM_I386_PC), y)
@@ -2384,19 +2378,6 @@ config_r:
 	@echo "make config"
 	/bin/bash script/Configure script/config.in
 
-DRIVER_VERSION = $(shell grep "#define DRIVERVERSION" include/rtw_version.h | awk '{print $$3}' | tr -d v\")
-
-dkms_install:
-	mkdir -p /usr/src/8814au-$(DRIVER_VERSION)
-	cp -r * /usr/src/8814au-$(DRIVER_VERSION)
-	dkms add -m 8814au -v $(DRIVER_VERSION)
-	dkms build -m 8814au -v $(DRIVER_VERSION)
-	dkms install -m 8814au -v $(DRIVER_VERSION)
-	dkms status
-
-dkms_remove:
-	dkms remove 8814au/$(DRIVER_VERSION) --all
-	rm -rf /usr/src/8814au-$(DRIVER_VERSION)
 
 .PHONY: modules clean
 

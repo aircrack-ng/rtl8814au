@@ -94,10 +94,6 @@ int rtw_monitor_retransmit = 0;
 module_param(rtw_monitor_retransmit, int, 0644);
 MODULE_PARM_DESC(rtw_monitor_retransmit, "Retransmit injected frames");
 
-int rtw_monitor_disable_1m = 0;
-module_param(rtw_monitor_disable_1m, int, 0644);
-MODULE_PARM_DESC(rtw_monitor_disable_1m, "Disable default 1Mbps rate for monitor injected frames");
-
 #ifdef CONFIG_NARROWBAND_SUPPORTING
 int rtw_nb_config = CONFIG_NB_VALUE;
 module_param(rtw_nb_config, int, 0644);
@@ -164,9 +160,13 @@ module_param(rtw_dynamic_agg_enable, int, 0644);
 * please refer to "How_to_set_driver_debug_log_level.doc" to set the available level.
 */
 #ifdef CONFIG_RTW_DEBUG
-uint rtw_drv_log_level = _DRV_NONE_;
+#ifdef RTW_LOG_LEVEL
+	uint rtw_drv_log_level = (uint)RTW_LOG_LEVEL; /* from Makefile */
+#else
+	uint rtw_drv_log_level = _DRV_INFO_;
+#endif
 module_param(rtw_drv_log_level, uint, 0644);
-MODULE_PARM_DESC(rtw_drv_log_level, "set log level when insert driver module, default log level is _DRV_NONE_ = 0");
+MODULE_PARM_DESC(rtw_drv_log_level, "set log level when insert driver module, default log level is _DRV_INFO_ = 4");
 #endif
 int rtw_radio_enable = 1;
 int rtw_long_retry_lmt = 7;
@@ -396,7 +396,7 @@ int rtw_drv_ant_band_switch = 1; /* 0:OFF , 1:ON, Driver control antenna band sw
 int rtw_single_ant_path; /*0:main ant , 1:aux ant , Fixed single antenna path, default main ant*/
 
 /* 0: doesn't switch, 1: switch from usb2.0 to usb 3.0 2: switch from usb3.0 to usb 2.0 */
-int rtw_switch_usb_mode = 1;
+int rtw_switch_usb_mode = 0;
 
 #ifdef CONFIG_USB_AUTOSUSPEND
 int rtw_enusbss = 1;/* 0:disable,1:enable */
@@ -1415,7 +1415,6 @@ uint loadparam(_adapter *padapter)
 #endif
 	registry_par->monitor_overwrite_seqnum = (u8)rtw_monitor_overwrite_seqnum;
 	registry_par->monitor_retransmit = (u8)rtw_monitor_retransmit;
-	registry_par->monitor_disable_1m = (u8)rtw_monitor_disable_1m;
 	return status;
 }
 
@@ -1712,15 +1711,8 @@ static const struct net_device_ops rtw_netdev_ops = {
 };
 #endif
 
-static const struct device_type wlan_type = {
-	.name = "wlan",
-};
-
 int rtw_init_netdev_name(struct net_device *pnetdev, const char *ifname)
 {
-	_adapter *padapter;
-	pnetdev->dev.type = &wlan_type;
-	padapter = rtw_netdev_priv(pnetdev);
 #ifdef CONFIG_EASY_REPLACEMENT
 	_adapter *padapter = rtw_netdev_priv(pnetdev);
 	struct net_device	*TargetNetdev = NULL;
@@ -1824,7 +1816,7 @@ struct net_device *rtw_init_netdev(_adapter *old_padapter)
 	/* pnetdev->tx_timeout = NULL; */
 	pnetdev->watchdog_timeo = HZ * 3; /* 3 second timeout */
 
-#if defined(CONFIG_WIRELESS_EXT) && !defined(CONFIG_CFG80211_WEXT)
+#ifdef CONFIG_WIRELESS_EXT
 	pnetdev->wireless_handlers = (struct iw_handler_def *)&rtw_handlers_def;
 #endif
 
@@ -1915,9 +1907,6 @@ int rtw_os_ndev_register(_adapter *adapter, const char *name)
 	rtw_init_netdev_name(ndev, name);
 
 	_rtw_memcpy(ndev->dev_addr, adapter_mac_addr(adapter), ETH_ALEN);
-#if defined(CONFIG_NET_NS)
-	dev_net_set(ndev, wiphy_net(adapter_to_wiphy(adapter)));
-#endif //defined(CONFIG_NET_NS)
 
 	/* Tell the network stack we exist */
 
@@ -1961,18 +1950,18 @@ void rtw_os_ndev_unregister(_adapter *adapter)
 	netdev = adapter->pnetdev;
 
 #if defined(CONFIG_IOCTL_CFG80211)
-       		 rtw_cfg80211_ndev_res_unregister(adapter);
+	rtw_cfg80211_ndev_res_unregister(adapter);
 #endif
 
-        if ((adapter->DriverState != DRIVER_DISAPPEAR) && netdev) {
-                struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-                u8 rtnl_lock_needed = rtw_rtnl_lock_needed(dvobj);
+	if ((adapter->DriverState != DRIVER_DISAPPEAR) && netdev) {
+		struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+		u8 rtnl_lock_needed = rtw_rtnl_lock_needed(dvobj);
 
-                if (rtnl_lock_needed)
-                        unregister_netdev(netdev);
-                else
-                        unregister_netdevice(netdev);
-        }
+		if (rtnl_lock_needed)
+			unregister_netdev(netdev);
+		else
+			unregister_netdevice(netdev);
+	}
 
 #if defined(CONFIG_IOCTL_CFG80211) && !defined(RTW_SINGLE_WIPHY)
 #ifdef CONFIG_RFKILL_POLL
@@ -3040,8 +3029,6 @@ static int netdev_vir_if_close(struct net_device *pnetdev)
 #endif
 
 #ifdef CONFIG_IOCTL_CFG80211
-	wdev->iftype = NL80211_IFTYPE_MONITOR;
-	wdev->current_bss = NULL;
 	rtw_scan_abort(padapter);
 	rtw_cfg80211_wait_scan_req_empty(padapter, 200);
 	adapter_wdev_data(padapter)->bandroid_scan = _FALSE;
@@ -3551,9 +3538,6 @@ int _netdev_open(struct net_device *pnetdev)
 {
 	uint status;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
-#ifdef CONFIG_IOCTL_CFG80211
-	struct wireless_dev *wdev = padapter->rtw_wdev;
-#endif
 	struct pwrctrl_priv *pwrctrlpriv = adapter_to_pwrctl(padapter);
 
 	RTW_INFO(FUNC_NDEV_FMT" start\n", FUNC_NDEV_ARG(pnetdev));
@@ -3565,7 +3549,7 @@ int _netdev_open(struct net_device *pnetdev)
 	}
 	#endif /*CONFIG_AUTOSUSPEND*/
 
-	if (!rtw_is_hw_init_completed(padapter)) { // ips
+	if (!rtw_is_hw_init_completed(padapter)) { // ips 
 		rtw_clr_surprise_removed(padapter);
 		rtw_clr_drv_stopped(padapter);
 		RTW_ENABLE_FUNC(padapter, DF_RX_BIT);
@@ -3587,7 +3571,7 @@ int _netdev_open(struct net_device *pnetdev)
 		{
 	#ifdef CONFIG_BT_COEXIST_SOCKET_TRX
 			_adapter *prim_adpt = GET_PRIMARY_ADAPTER(padapter);
-
+		
 			if (prim_adpt && (_TRUE == prim_adpt->EEPROMBluetoothCoexist)) {
 				rtw_btcoex_init_socket(prim_adpt);
 				prim_adpt->coex_info.BtMgnt.ExtConfig.HCIExtensionVer = 0x04;
@@ -3619,13 +3603,14 @@ int _netdev_open(struct net_device *pnetdev)
 		rtw_cfg80211_init_wiphy(padapter);
 		rtw_cfg80211_init_wdev_data(padapter);
 		#endif
-		rtw_netif_carrier_on(pnetdev); /* call this func when rtw_joinbss_event_callback return success */
+		/* rtw_netif_carrier_on(pnetdev); */ /* call this func when rtw_joinbss_event_callback return success */
 		rtw_netif_wake_queue(pnetdev);
 
 		#ifdef CONFIG_BR_EXT
 		if (is_primary_adapter(padapter))
 			netdev_br_init(pnetdev);
 		#endif /* CONFIG_BR_EXT */
+
 
 		padapter->bup = _TRUE;
 		padapter->net_closed = _FALSE;
@@ -3667,6 +3652,7 @@ int _netdev_open(struct net_device *pnetdev)
 #ifdef CONFIG_BT_COEXIST_SOCKET_TRX
 	HAL_DATA_TYPE		*pHalData = GET_HAL_DATA(padapter);
 #endif /* CONFIG_BT_COEXIST_SOCKET_TRX */
+
 
 	RTW_INFO(FUNC_NDEV_FMT" , bup=%d\n", FUNC_NDEV_ARG(pnetdev), padapter->bup);
 
@@ -3749,7 +3735,7 @@ int _netdev_open(struct net_device *pnetdev)
 	rtw_set_pwr_state_check_timer(pwrctrlpriv);
 #endif
 
-	rtw_netif_carrier_on(pnetdev); /* call this func when rtw_joinbss_event_callback return success */
+	/* rtw_netif_carrier_on(pnetdev); */ /* call this func when rtw_joinbss_event_callback return success */
 	rtw_netif_wake_queue(pnetdev);
 
 #ifdef CONFIG_BR_EXT
@@ -5068,7 +5054,7 @@ int rtw_resume_process_wow(_adapter *padapter)
 		rtw_mi_start_drv_threads(padapter);
 
 		rtw_mi_intf_start(padapter);
-
+		
 		if(registry_par->suspend_type == FW_IPS_DISABLE_BBRF && !check_fwstate(pmlmepriv, _FW_LINKED)) {
 			if (!rtw_is_surprise_removed(padapter)) {
 				rtw_hal_deinit(padapter);
