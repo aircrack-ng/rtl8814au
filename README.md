@@ -6,16 +6,15 @@ Drivers for the rtl8814au chipset wireless adapters
 git clone https://github.com/aircrack-ng/rtl8814au.git
 cd driver
 make
-sudo make install
+make install
 ```
 
-# debian dkms package (require dpkg-dev, dkms, dh-modaliases)
+# debian dkms package (require dpkg-dev, dkms)
 ```
-sudo apt install  debhelper dpkg-dev dkms dh-modaliases
-cd driver
+apt install debhelper dpkg-dev dkms
 dpkg-buildpackage -b --no-sign
 cd ..
-dpkg -i rtl8814au-dkms_4.3.21.1-24835.20190115_all.deb
+dpkg -i rtl8814au-dkms_5.8.5.1-24835.20190115_all.deb
 ```
 
 
