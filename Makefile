@@ -2376,7 +2376,7 @@ config_r:
 	@echo "make config"
 	/bin/bash script/Configure script/config.in
 
-DRIVER_VERSION = $(shell grep "#define DRIVERVERSION" include/rtw_version.h | awk '{print $$3}' | tr -d v\")
+DRIVER_VERSION = $(shell grep "\#define DRIVERVERSION" include/rtw_version.h | awk '{print $$3}' | tr -d v\")
 
 dkms_install:
 	mkdir -p /usr/src/8814au-$(DRIVER_VERSION)
