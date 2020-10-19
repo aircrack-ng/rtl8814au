@@ -4,19 +4,25 @@ Drivers for the rtl8814au chipset wireless adapters
 # build & install
 ```
 git clone https://github.com/aircrack-ng/rtl8814au.git
-cd driver
+cd rtl8814au
 make
 make install
 ```
 
-# debian dkms package (require dpkg-dev, dkms)
+# DKMS installation (normal)
+```
+$ make dkms_install
+and to remove the dkms driver, type..
+$ make dkms_remove
+```
+
+# ubuntu dkms package (require dpkg-dev, dkms)
 ```
 apt install debhelper dpkg-dev dkms
 dpkg-buildpackage -b --no-sign
 cd ..
 dpkg -i rtl8814au-dkms_5.8.5.1-24835.20190115_all.deb
 ```
-
 
 
 ## UEFI Secure Boot - (boot the kernel with signed)
