@@ -18,7 +18,7 @@ $ make dkms_remove
 
 # ubuntu dkms package (require dpkg-dev, dkms)
 ```
-apt install debhelper dpkg-dev dkms
+apt install debhelper dpkg-dev dkms libelf-dev bc 
 dpkg-buildpackage -b --no-sign
 cd ..
 dpkg -i rtl8814au-dkms_5.8.5.1-24835.20190115_all.deb
