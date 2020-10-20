@@ -1,12 +1,19 @@
 # rtl8814au
 Drivers for the rtl8814au chipset wireless adapters
 
+
 # build & install
 ```
-git clone https://github.com/aircrack-ng/rtl8814au.git
-cd rtl8814au
-make
-make install
+$ git clone https://github.com/aircrack-ng/rtl8814au.git
+$ cd rtl8814au
+$ make
+$ make install
+```
+
+# TODO
+```
+* Fix injection capabilities again
+* Fix USBModeSwitch function (and switch between USB2 and USB3/SuperSpeed)
 ```
 
 # DKMS installation (normal)
@@ -18,10 +25,10 @@ $ make dkms_remove
 
 # ubuntu dkms package (require dpkg-dev, dkms)
 ```
-apt install debhelper dpkg-dev dkms libelf-dev bc 
-dpkg-buildpackage -b --no-sign
-cd ..
-dpkg -i rtl8814au-dkms_5.8.5.1-24835.20190115_all.deb
+$ apt install debhelper dpkg-dev dkms libelf-dev bc 
+$ dpkg-buildpackage -b --no-sign
+$ cd ..
+$ dpkg -i rtl8814au-dkms_5.8.5.1-24835.20190115_all.deb
 ```
 
 
