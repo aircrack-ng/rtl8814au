@@ -428,7 +428,25 @@ static void rtw_get_chbw_from_nl80211_channel_type(struct ieee80211_channel *cha
 #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)) */
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0))
-u8 rtw_cfg80211_ch_switch_notify(_adapter *adapter, u8 ch, u8 bw, u8 offset, u8 ht)
+bool rtw_cfg80211_allow_ch_switch_notify(_adapter *adapter)
+{
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 19, 0))
+        if ((!MLME_IS_AP(adapter))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 13, 0))
+                && (!MLME_IS_ADHOC(adapter))
+                && (!MLME_IS_ADHOC_MASTER(adapter))
+                && (!MLME_IS_MESH(adapter))
+#elif defined(CONFIG_RTW_MESH)
+                && (!MLME_IS_MESH(adapter))
+#endif
+                )
+                return 0;
+#endif
+        return 1;
+}
+
+u8 rtw_cfg80211_ch_switch_notify(_adapter *adapter, u8 ch, u8 bw, u8 offset,
+	u8 ht, bool started)
 {
 	struct wiphy *wiphy = adapter_to_wiphy(adapter);
 	u8 ret = _SUCCESS;
@@ -440,11 +458,23 @@ u8 rtw_cfg80211_ch_switch_notify(_adapter *adapter, u8 ch, u8 bw, u8 offset, u8 
 	if (ret != _SUCCESS)
 		goto exit;
 
-	cfg80211_ch_switch_notify(adapter->pnetdev, &chdef);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 19, 0))
+	if (started) {
+		cfg80211_ch_switch_started_notify(adapter->pnetdev, &chdef, 0);
+		goto exit;
+	}
+#endif
+
+    if (!rtw_cfg80211_allow_ch_switch_notify(adapter))
+        	goto exit;
+		cfg80211_ch_switch_notify(adapter->pnetdev, &chdef);
 
 #else
 	int freq = rtw_ch2freq(ch);
 	enum nl80211_channel_type ctype;
+
+	if (!rtw_cfg80211_allow_ch_switch_notify(adapter))
+		goto exit;
 
 	if (!freq) {
 		ret = _FAIL;
@@ -4411,6 +4441,9 @@ void rtw_cfg80211_indicate_sta_assoc(_adapter *padapter, u8 *pmgmt_frame, uint f
 		sinfo.filled = STATION_INFO_ASSOC_REQ_IES;
 		sinfo.assoc_req_ies = pmgmt_frame + WLAN_HDR_A3_LEN + ie_offset;
 		sinfo.assoc_req_ies_len = frame_len - WLAN_HDR_A3_LEN - ie_offset;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 18, 0))
+		cfg80211_sinfo_alloc_tid_stats(&sinfo, GFP_KERNEL);
+#endif
 		cfg80211_new_sta(ndev, get_addr2_ptr(pmgmt_frame), &sinfo, GFP_ATOMIC);
 	}
 #else /* defined(RTW_USE_CFG80211_STA_EVENT) */

@@ -1733,7 +1733,7 @@ static int rtw_cfgvendor_set_nd_offload(struct wiphy *wiphy,
 	}
 
 	RTW_INFO("%s nd_en=%d, err=%d\n", __func__, nd_en, err);
-	
+
 	return err;
 }
 #endif /* CONFIG_RTW_WIFI_HAL */
