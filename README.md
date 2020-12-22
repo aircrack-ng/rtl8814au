@@ -46,7 +46,7 @@ $ dpkg -i rtl8814au-dkms_5.8.5.1-24835.20190115_all.deb
 2. Sign the module
 
 ```
-    sudo /usr/src/linux-headers-$(uname -r)/scripts/sign-file sha256 ./MOK.priv ./MOK.der /path/to/module
+    sudo /usr/src/linux-headers-$(uname -r)/scripts/sign-file sha256 ./MOK.priv ./MOK.der $(modinfo -n rtl8812au)
 ```
 3. Register the keys to Secure Boot
 
