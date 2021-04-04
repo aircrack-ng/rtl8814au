@@ -4559,6 +4559,10 @@ const struct rtw_proc_hdl adapter_proc_hdls[] = {
 #endif
 
 	RTW_PROC_HDL_SSEQ("cur_beacon_keys", proc_get_cur_beacon_keys, NULL),
+
+#ifdef CONFIG_RTW_SW_LED
+	RTW_PROC_HDL_SSEQ("led_ctrl", proc_get_led_ctrl, proc_set_led_ctrl),
+#endif
 };
 
 const int adapter_proc_hdls_num = sizeof(adapter_proc_hdls) / sizeof(struct rtw_proc_hdl);

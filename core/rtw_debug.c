@@ -7261,3 +7261,67 @@ inline void RTW_BUF_DUMP_SEL(uint _loglevel, void *sel, u8 *_titlestring,
 }
 
 #endif
+
+#ifdef CONFIG_RTW_SW_LED
+int proc_get_led_ctrl(struct seq_file *m, void *v)
+{
+	struct net_device *dev = m->private;
+	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
+	struct registry_priv	*pregpriv = &padapter->registrypriv;
+
+	if (pregpriv)
+		RTW_PRINT_SEL(m, "%d\n", pregpriv->led_ctrl);
+
+	return 0;
+}
+
+ssize_t proc_set_led_ctrl(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
+{
+	struct net_device *dev = data;
+	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
+	struct registry_priv	*pregpriv = &padapter->registrypriv;
+	struct led_priv *ledpriv = adapter_to_led(padapter);
+	char tmp[32];
+	u32 mode;
+
+	if (buffer == NULL || pregpriv == NULL) {
+		RTW_INFO("input buffer is NULL!\n");
+		return -EFAULT;
+	}
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+
+		int num = sscanf(tmp, "%d ", &mode);
+
+		if (num != 1) {
+			RTW_INFO("Invalid format\n");
+			return count;
+		}
+
+		if (mode < 0 || mode > 2 || pregpriv->led_ctrl == mode) {
+			RTW_INFO("Invalid mode\n");
+			return count;
+		}
+
+		if (mode > 0) {
+			pregpriv->led_ctrl = (u8) mode;
+			LedControlUSB(padapter, LED_CTL_POWER_ON);
+		} else {
+			LedControlUSB(padapter, LED_CTL_POWER_OFF);
+			pregpriv->led_ctrl = (u8) mode;
+		}
+
+		RTW_INFO("led_ctrl=%d\n", pregpriv->led_ctrl);
+	}
+
+	return count;
+}
+#endif /* CONFIG_RTW_SW_LED */
