@@ -16,6 +16,10 @@
 #define __OSDEP_LINUX_SERVICE_H_
 
 #include <linux/version.h>
+#ifndef RHEL_RELEASE_CODE
+#define RHEL_RELEASE_VERSION(a,b) (((a) << 8 ) + (b))
+#define RHEL_RELEASE_CODE 0
+#endif
 #include <linux/spinlock.h>
 #include <linux/compiler.h>
 #include <linux/kernel.h>
