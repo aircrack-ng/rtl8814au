@@ -62,9 +62,9 @@ $ sudo /usr/src/linux-headers-$(uname -r)/scripts/sign-file sha256 ./MOK.priv ./
 ```
 $ sudo mokutil --import MOK.der
 ```
-**Note 2:** you will need to supply a password here for user later on.
+**Note 2:** you will need to supply a password here for use later on.
 
-4. Reboot, enter Mok Management when prompted, select "Enroll MOK," follow the instructions to enroll the previously registered MOK (Machine Owner Key) with your password, and reboot one last time when prompted.
+4. Reboot, enter MOK Management when prompted, select "Enroll MOK," follow the instructions to enroll the previously registered MOK (Machine Owner Key) with your password, and reboot one last time when prompted.
 
 5. Confirm that the key is enrolled
 ```
