@@ -1,88 +1,88 @@
 # rtl8814au
-Drivers for the rtl8814au chipset wireless adapters
+Linux drivers for rtl8814au chipset wireless adapters
 
 
-# build & install
+## TODO
+[] Fix injection capabilities again\
+[] Fix USBModeSwitch function (and switch between USB 2.0 and 3.0/SuperSpeed at runtime)
+
+
+## Dependencies
+```
+$ sudo apt-get update && sudo apt-get upgrade
+$ sudo apt-get install build-essential dkms git libelf-dev linux-headers-`uname -r`
+```
+
+
+## Build and Install
 ```
 $ git clone https://github.com/aircrack-ng/rtl8814au.git
 $ cd rtl8814au
 $ make
-$ make install
+$ sudo make install
 ```
 
-# TODO
+
+## DKMS installation (standard installation)
+Install driver
 ```
-* Fix injection capabilities again
-* Fix USBModeSwitch function (and switch between USB2 and USB3/SuperSpeed)
+$ sudo make dkms_install
+```
+Remove driver
+```
+$ sudo make dkms_remove
 ```
 
-# DKMS installation (normal)
-```
-$ make dkms_install
-and to remove the dkms driver, type..
-$ make dkms_remove
-```
 
-# ubuntu dkms package (require dpkg-dev, dkms)
+## Debian DKMS package (non-standard installation)
 ```
-$ apt install debhelper dpkg-dev dkms libelf-dev bc 
-$ dpkg-buildpackage -b --no-sign
+$ sudo apt-get install bc debhelper dkms dpkg-dev libelf-dev
+$ sudo dpkg-buildpackage -b --no-sign
 $ cd ..
-$ dpkg -i rtl8814au-dkms_5.8.5.1-24835.20190115_all.deb
+$ sudo dpkg -i rtl8814au-dkms_5.8.5.1-24835.20190115_all.deb
 ```
 
 
-## UEFI Secure Boot - (boot the kernel with signed)
- if insmod the module it shows error of "Required key not available", you are using a kernel which is signed
- Only signed module can be use in this condition.
+## UEFI Secure Boot compatibility
+**Note:** If you have secure boot *enabled* (i.e., you're using a signed kernel), you will need to sign this module in order for it to work with your system.
 
- ![sign needed error](pics/need-sign.png)
+To do so:
 
-1. Create signing keys
-
+1. Create signing key
 ```
-    openssl req -new -x509 -newkey rsa:2048 -keyout MOK.priv -outform DER -out MOK.der -nodes -days 36500 -subj "/CN=Descriptive name/"
+$ openssl req -new -x509 -newkey rsa:2048 -keyout MOK.priv -outform DER -out MOK.der -nodes -days 36500 -subj "/CN=Descriptive name/"
 ```
+
 2. Sign the module
+```
+$ sudo /usr/src/linux-headers-$(uname -r)/scripts/sign-file sha256 ./MOK.priv ./MOK.der $(sudo modinfo -n 8814au)
+```
 
+3. Register the key to Secure Boot
 ```
-    sudo /usr/src/linux-headers-$(uname -r)/scripts/sign-file sha256 ./MOK.priv ./MOK.der $(modinfo -n rtl8812au)
+$ sudo mokutil --import MOK.der
 ```
-3. Register the keys to Secure Boot
+**Note 2:** you will need to supply a password here for user later on.
 
-```
-    sudo mokutil --import MOK.der
-```
-		Supply a password for later use after reboot
+4. Reboot, enter Mok Management when prompted, select "Enroll MOK," follow the instructions to enroll the previously registered MOK (Machine Owner Key) with your password, and reboot one last time when prompted.
 
-4. Reboot and follow instructions to Enroll MOK (Machine Owner Key).
-   Here's a sample with pictures. The system will reboot one more time.
-5. Confirm the key is enrolled
-
+5. Confirm that the key is enrolled
 ```
-mokutil --test-key MOK.der
+$ sudo mokutil --test-key MOK.der
 ```
 
 
+## Switching between USB 2.0/3.0 modes
+By default, this driver is configured for USB 2.0 (i.e., a theoretical throughput of 480 MB/s).
 
-# USB2.0/3.0 mode switch
+To change the configuration:
 
-<pre>
- initial it will use USB2.0 mode which will limite 5G 11ac throughput (USB2.0 bandwidth only 480Mbps => throughput around 240Mbps)
-when modprobe add following options will let it switch to USB3.0 mode at initial driver
-options 8814au rtw_switch_usb_mode=1
-</<pre>
-
-
-## TODO: run time change usb2.0/3.0 mode
-### usb2.0 => usb3.0
+USB 2.0 -> 3.0
 ```
-sudo sh -c "echo '1' > /sys/module/8814au/parameters/rtw_switch_usb_mode"
-```
-### usb3.0 => usb2.0
-```
-sudo sh -c "echo '2' > /sys/module/8814au/parameters/rtw_switch_usb_mode"
+$ sudo sh -c "echo '1' > /sys/module/8814au/parameters/rtw_switch_usb_mode"
 ```
 
-
-
+USB 3.0 -> 2.0
+```
+$ sudo sh -c "echo '2' > /sys/module/8814au/parameters/rtw_switch_usb_mode"
+```
