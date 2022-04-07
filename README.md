@@ -9,8 +9,8 @@ Linux drivers for rtl8814au chipset wireless adapters
 
 ## Dependencies
 ```
-$ sudo apt-get update && sudo apt-get upgrade
-$ sudo apt-get install build-essential dkms git libelf-dev linux-headers-`uname -r`
+$ sudo apt update && sudo apt upgrade
+$ sudo apt install build-essential dkms git libelf-dev linux-headers-`uname -r`
 ```
 
 
@@ -36,7 +36,7 @@ $ sudo make dkms_remove
 
 ## Debian DKMS package (non-standard installation)
 ```
-$ sudo apt-get install bc debhelper dkms dpkg-dev libelf-dev
+$ sudo apt install bc debhelper dpkg-dev
 $ sudo dpkg-buildpackage -b --no-sign
 $ cd ..
 $ sudo dpkg -i rtl8814au-dkms_5.8.5.1-24835.20190115_all.deb
