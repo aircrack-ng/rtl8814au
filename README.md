@@ -2,6 +2,11 @@
 Drivers for the rtl8814au chipset wireless adapters
 
 
+# THESE DRIVERS IS DEPRECATED.
+# Use the mac80211 drivers over at [https://github.com/lwfinger/rtw88](https://github.com/lwfinger/rtw88)
+
+
+
 # build & install
 ```
 $ git clone https://github.com/aircrack-ng/rtl8814au.git
