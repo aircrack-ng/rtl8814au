@@ -16,6 +16,10 @@
 #define __PLATFORM_AML_S905_SDIO_H__
 
 #include <linux/version.h>	/* Linux vresion */
+#ifndef RHEL_RELEASE_CODE
+#define RHEL_RELEASE_VERSION(a,b) (((a) << 8 ) + (b))
+#define RHEL_RELEASE_CODE 0
+#endif
 
 extern void sdio_reinit(void);
 extern void extern_wifi_set_enable(int is_on);
